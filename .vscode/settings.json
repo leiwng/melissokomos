@@ -1,22 +1,8 @@
 {
-    "deepscan.enable": true,
-    "cSpell.words": [
-        "mbank",
-        "pino"
-    ],
-    "[javascript]": {
-        "editor.tabSize": 4
-    },
-    "[html]": {
-        "editor.tabSize": 4
-    },
-    "[json]": {
-        "editor.tabSize": 4
-    },
-    "[css]": {
-        "editor.tabSize": 4
-    },
-    "[python]": {
-        "editor.tabSize": 4
-    }
+  "deepscan.enable": true,
+  "cSpell.words": [
+    "mbank",
+    "pino"
+  ],
+  "editor.tabSize": 2
 }

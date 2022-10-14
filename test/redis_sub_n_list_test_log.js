@@ -22,5 +22,5 @@ module.exports = pinoLogger(
       },
     },
   },
-  pinoLogger.destination(`${__dirname}/bee.log`)
+  pinoLogger.destination(`${__dirname}/redis_sub_n_list_test.log`)
 );
