@@ -1,6 +1,6 @@
 const { ssh } = require('ssh2');
 const Redis = require("ioredis");
-const logger = require("./bee_logger")
+const logger = require("./fake_bee_logger")
 
 
 class Bee {
@@ -84,12 +84,13 @@ class Bee {
         },
         'Bee, SSH on keyboard-interactive'
       );
-    }).connect({
-      host: this.ssh_host,
-      port: this.ssh_port,
-      username: this.ssh_user,
-      password: this.ssh_pass
     });
+    // .connect({
+    //   host: this.ssh_host,
+    //   port: this.ssh_port,
+    //   username: this.ssh_user,
+    //   password: this.ssh_pass
+    // });
 
   } // end of constructor
 

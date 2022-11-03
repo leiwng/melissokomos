@@ -13,10 +13,17 @@ class Hive {
     this.task_chg_res_channel_name = process.env.SINGED_TASK_CHG_RES;
     this.task_stat_table_name = process.env.SINGED_TASK_STAT;
     this.node_stat_table_name = process.env.SINGED_NODE_STAT;
+    this.chk_task_interval_time = process.env.SINGED_CHK_TASK_INTERVAL;
+    this.update_node_stat_interval_time = process.env.SINGED_UPDATE_NODE_STAT_INTERVAL;
+
     this.node_stat = {};
     this.node_tasks = [];
     this.bees = [];
+
     this.chk_task_interval = null;
+    this.update_node_stat_interval = null;
+    this.start_timestamp = Math.floor(Date.now() / 1000)
+    this.uptime = 0
 
     // read node stat table for resume tasks
     this.redis = new Redis(this.redis_url);
@@ -26,13 +33,6 @@ class Hive {
       if (res == 1) {
         this.redis.hget(this.node_stat_table_name, this.node_id, (err, res) => {
           if (err) {
-            this.node_stat = {
-              NODE_ID: this.node_id,
-              UPTIME: 0,
-              TASK_LIMIT: this.task_limit,
-              TASK_COUNT: 0
-
-            };
             logger.error(
               {
                 node_id: this.node_id,
@@ -43,6 +43,24 @@ class Hive {
               },
               "节点初始化：没能根据node_id找到node_stat."
             );
+
+            // 找不到旧的node_stat, 生成新的node_stat
+            this.node_stat = {
+              NODE_ID: this.node_id,
+              UPTIME: 0,
+              TASK_LIMIT: this.task_limit,
+              TASK_COUNT: 0,
+              REDIS_URL: this.redis_url,
+              TASK_QUEUE: this.task_queue_name,
+              TASK_CHG_REQ_CHANNEL: this.task_chg_req_channel_name,
+              TASK_CHG_RES_CHANNEL: this.task_chg_res_channel_name,
+              TASK_STAT_TABLE: this.task_stat_table_name,
+              NODE_STAT_TABLE: this.node_stat_table_name,
+              TASK_LIST: []
+            };
+            // 在node_stat_table中，没有找到node_id, 更新TASK_LIST为空的node_stat到node_stat_table
+            update_node_stat();
+
           } else {
             this.node_stat = JSON.parse(res);
             logger.info(
@@ -155,7 +173,10 @@ class Hive {
 
   start() {
     // 听Task Queue接受新任务
-    this.chk_task_interval = setInterval(this.chk_new_task, 1000);
+    this.chk_task_interval = setInterval(
+      this.chk_new_task,
+      this.chk_task_interval_time
+    );
     logger.info(
       {
         node_id: this.node_id,
@@ -165,6 +186,22 @@ class Hive {
         chk_task_interval: this.chk_task_interval,
       },
       "节点启动：开始监听任务队列."
+    );
+
+    // 设置定时更新node_stat_table
+    this.update_node_stat_interval = setInterval(
+      this.update_node_stat,
+      this.update_node_stat_interval_time
+    );
+    logger.info(
+      {
+        node_id: this.node_id,
+        node_stat_table_name: this.node_stat_table_name,
+        func: "Hive->start",
+        step: "启动update_node_stat定时器成功.",
+        update_node_stat_interval: this.update_node_stat_interval,
+      },
+      "节点启动：开始定时更新node_stat."
     );
   } // end of start
 
@@ -185,7 +222,7 @@ class Hive {
           );
         } else {
           // 从任务队列中取出任务
-          const task = JSON.parse(res[1]);
+          let task = JSON.parse(res[1]);
           logger.info(
             {
               node_id: this.node_id,
@@ -212,10 +249,83 @@ class Hive {
             },
             "启动新bee."
           );
+
+          // 增加新Task，启动新的Bee，更新node_stat
+          update_node_stat();
         }
       });
     }
   } // end of chk_new_task
+
+  update_node_stat() {
+
+    // 更新node_stat中的node信息
+    this.node_stat.NODE_ID = this.node_id
+    this.node_stat.UPTIME = Math.floor(Date.now() / 1000) - this.start_timestamp
+    this.uptime = this.node_stat.UPTIME
+    this.node_stat.TASK_LIMIT = this.task_limit
+    this.node_stat.TASK_COUNT = this.bees.length
+    this.node_stat.REDIS_URL = this.redis_url
+    this.node_stat.TASK_QUEUE = this.task_queue_name
+    this.node_stat.TASK_CHG_REQ_CHANNEL = this.task_chg_req_channel_name
+    this.node_stat.TASK_CHG_RES_CHANNEL = this.task_chg_res_channel_name
+    this.node_stat.TASK_STAT_TABLE = this.task_stat_table_name
+    this.node_stat.NODE_STAT_TABLE = this.node_stat_table_name
+
+    // 更新node_stat中的task信息
+    if (this.bees.length > 0) {
+      this.node_stat.TASK_LIST = this.bees.map((bee) => {
+        return {
+          ID: bee.task.ID,
+          TYPE: bee.task.TYPE,
+          NAME: bee.task.NAME,
+          DESC: bee.task.DESC,
+
+          INPUT: bee.task.INPUT,
+          OUTPUT: bee.task.OUTPUT,
+
+          STATE: bee.ssh_status,
+          STATE_DESC: bee.ssh_status,
+          UPTIME: bee.uptime,
+          WORK_COUNT: bee.line_counter,
+        };
+      });
+    } else {
+      this.node_stat.TASK_LIST = [];
+    }
+
+    // 把node_stat更新到node_stat_table
+    this.redis.hset(
+      this.node_stat_table_name,
+      this.node_id,
+      JSON.stringify(this.node_stat),
+      (err, res) => {
+        if (err) {
+          logger.error(
+            {
+              node_id: this.node_id,
+              node_stat_table_name: this.node_stat_table_name,
+              func: "Hive->update_node_stat",
+              step: "更新node_stat失败.",
+              err: err
+            },
+            "更新node_stat失败."
+          );
+        } else {
+          logger.info(
+            {
+              node_id: this.node_id,
+              node_stat_table_name: this.node_stat_table_name,
+              func: "Hive->update_node_stat",
+              step: "更新node_stat成功.",
+              node_stat: this.node_stat
+            },
+            "更新node_stat成功."
+          );
+        }
+      }
+    );
+  } // end of update_node_stat
 
   stop_bee(bee_id) {
     // 停止bee
