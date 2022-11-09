@@ -1,8 +1,13 @@
 {
   "deepscan.enable": true,
   "cSpell.words": [
+    "Cukoobee",
+    "emerg",
+    "filebeat",
+    "Masonbee",
     "mbank",
-    "pino"
+    "pino",
+    "TASKID"
   ],
   "[javascript]": {
     "editor.tabSize": 2

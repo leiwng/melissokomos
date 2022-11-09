@@ -26,7 +26,7 @@ function update_node_stat(node_id, node_stat, bees) {
   if (this.bees.length > 0) {
     node_stat.TASK_LIST = this.bees.map((bee) => {
       return {
-        ID: bee.task.ID,
+        ID: bee.task.TASKID,
         TYPE: bee.task.TYPE,
         NAME: bee.task.NAME,
         DESC: bee.task.DESC,

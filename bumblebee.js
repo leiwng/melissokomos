@@ -1,32 +1,20 @@
+/***
+ * Bumblebee 负责通过 ssh 通道从远程目标机上被动获取日志数据
+ * Bumblebee 实现数据采集的自管理 self-management，包括：
+ * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动停止接受新的采集任务
+ * 2. 自动读取采集任务,并交由 Bumblebee 执行
+ * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
+***/
 const { ssh } = require('ssh2');
 const Redis = require("ioredis");
-const logger = require("./fake_bee_logger")
+const logger = require("./bumblebee_logger")
 
 
-class Bee {
+class Bumblebee {
   constructor(task) {
 
-    this.task = task
-    this.id = task.ID
-
-    this.start_timestamp = Math.floor(Date.now() / 1000)
-    this.uptime = 0
-
-    this.ssh_host = task.INPUT.SSH_HOST
-    this.ssh_port = task.INPUT.SSH_PORT
-    this.ssh_user = task.INPUT.SSH_USER
-    this.ssh_pass = task.INPUT.SSH_PASS
-    this.ssh_cmd = task.INPUT.COMMAND_LINE
-    this.ssh_encoding = task.INPUT.ENCODING
-
-    this.pub = new Redis(task.OUTPUT.URL)
-    this.pub_channel = task.OUTPUT.CHANNEL
-
-    this.ssh = new ssh()
-    this.ssh_data_buffer = ''
-    this.ssh_status = 'disconnected'
-
-    this.line_counter = 0
+    // 根据任务参数初始化对象属性
+    this.init(task)
 
     // 部署任务
     this.ssh.on('ready', () => {
@@ -44,7 +32,7 @@ class Bee {
           pub_channel: this.pub_channel,
           ssh_status: this.ssh_status
         },
-        'Bee, SSH on ready'
+        'Bumblebee, SSH on ready'
       );
 
     }).on('error', function (err) {
@@ -55,22 +43,23 @@ class Bee {
           bee_id: this.id,
           error: err
         },
-        'Bee, SSH on error'
+        'Bumblebee, SSH on error'
       );
+      return
     }).on('end', function () {
       this.ssh_status = 'end'
       logger.info(
         {
           bee_id: this.id
         },
-        'Bee, SSH on end');
-    }).on('close', function (had_error) {
+        'Bumblebee, SSH on end');
+    }).on('close', function () {
       this.ssh_status = 'closed'
       logger.info(
         {
           bee_id: this.id
         },
-        'Bee, SSH on close');
+        'Bumblebee, SSH on close');
     }).on('keyboard-interactive', function (name, instructions, instructionsLang, prompts, finish) {
       this.ssh_status = 'keyboard-interactive'
       logger.info(
@@ -82,24 +71,54 @@ class Bee {
           keyboard_interactive_prompts: prompts,
           keyboard_interactive_finish: finish
         },
-        'Bee, SSH on keyboard-interactive'
+        'Bumblebee, SSH on keyboard-interactive'
       );
+    }).connect({
+      host: this.ssh_host,
+      port: this.ssh_port,
+      username: this.ssh_user,
+      password: this.ssh_pass
     });
-    // .connect({
-    //   host: this.ssh_host,
-    //   port: this.ssh_port,
-    //   username: this.ssh_user,
-    //   password: this.ssh_pass
-    // });
 
   } // end of constructor
+
+  init(task) {
+    this.task = task
+
+    this.id = task.TASKID
+    this.action = task.ACTION //"start"
+    this.name = task.NAME
+    this.desc = task.DESC
+
+    this.start_ts = Date.now()
+    this.uptime = 0
+
+    this.ssh_host = task.INPUT.SSH_HOST
+    this.ssh_port = task.INPUT.SSH_PORT
+    this.ssh_user = task.INPUT.SSH_USER
+    this.ssh_pass = task.INPUT.SSH_PASS
+    this.ssh_cmd = task.INPUT.COMMAND_LINE
+    this.ssh_cmd_type = task.INPUT.COLLECTOR_TYPE //"LongScript"
+    this.ssh_encoding = task.INPUT.ENCODING
+
+    this.output_type = task.OUTPUT.TYPE //现在只支持redis "REDIS"
+    this.output_method = task.OUTPUT.METHOD //现在只支持PUBLISH "PUSH"
+    this.pub = new Redis(task.OUTPUT.URL)
+    this.pub_channel = task.OUTPUT.CHANNEL
+
+    this.ssh = new ssh()
+    this.ssh_data_buffer = ''
+    this.ssh_status = 'disconnected'
+
+    this.line_counter = 0
+  } // end of init
 
   start() {
     logger.info(
       {
         bee_id: this.id
       },
-      'Bee, start'
+      'Bumblebee, start'
     );
 
     if (this.ssh_status != 'ready') {
@@ -107,7 +126,7 @@ class Bee {
         {
           bee_id: this.id
         },
-        'Bee, SSH is not ready')
+        'Bumblebee, SSH is not ready')
       return
     }
 
@@ -122,9 +141,10 @@ class Bee {
             stream_on_close_code: code,
             stream_on_close_signal: signal
           },
-          'Bee, SSH Stream on close'
+          'Bumblebee, SSH Stream on close'
         );
         this.ssh.end();
+        return
       }).on('data', (data) => {
 
         this.ssh_status = 'on_data'
@@ -144,7 +164,7 @@ class Bee {
               // 按行PUB出去
               this.pub.publish(this.pub_channel, data_line)
               this.line_counter += 1
-              this.uptime = Math.floor(Date.now() / 1000) - this.start_timestamp
+              this.uptime = Date.now() - this.start_ts
 
               this.ssh_data_buffer = ''
               return
@@ -178,7 +198,7 @@ class Bee {
             // 按行PUB出去
             this.pub.publish(this.pub_channel, data_line)
             this.line_counter += 1
-            this.uptime = Math.floor(Date.now() / 1000) - this.start_timestamp
+            this.uptime = Date.now() - this.start_ts
 
           }
           // 最后一行数据，如果以回车符结束，就清空缓存，否则缓存起来
@@ -188,7 +208,7 @@ class Bee {
             // 按行PUB出去
             this.pub.publish(this.pub_channel, data_line)
             this.line_counter += 1
-            this.uptime = Math.floor(Date.now() / 1000) - this.start_timestamp
+            this.uptime = Date.now() - this.start_ts
 
             this.ssh_data_buffer = ''
           } else {
@@ -202,7 +222,7 @@ class Bee {
             bee_id: this.id,
             data: data
           },
-          'Bee, SSH Stream on stderr'
+          'Bumblebee, SSH Stream on stderr'
         )
       });
 
@@ -215,7 +235,7 @@ class Bee {
       {
         bee_id: this.id
       },
-      'Bee, stopping...'
+      'Bumblebee, stopping...'
     );
 
     if (this.ssh !== undefined) {
@@ -229,10 +249,10 @@ class Bee {
       {
         bee_id: this.id
       },
-      'Bee, stopped.'
+      'Bumblebee, stopped.'
     );
   } // end of stop
 
-}; // end of class Bee
+}; // end of class Bumblebee
 
-module.exports = Bee
+module.exports = Bumblebee

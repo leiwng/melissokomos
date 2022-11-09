@@ -1,5 +1,3 @@
-
-
 class Cellar {
   constructor(tasks) {
     this.tasks = tasks.filter(task => task.TYPE === 'Parser')

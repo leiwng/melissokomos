@@ -1,20 +1,36 @@
+/***
+ * Hive 负责启动 Bee 从远程目标机上获取数据，包括日志数据和执行 shell script 的结果数据
+ * Hive 实现数据采集的自管理 self-management，包括：
+ * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动停止接受新的采集任务
+ * 2. 自动读取采集任务,并交由 Bee 执行
+ * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
+***/
 const Redis = require("ioredis");
 const Bee = require("./bee");
 const logger = require("./hive_logger");
 
 class Hive {
   constructor() {
-    // get env
+    // 从env中获取运行的基础设施和基本标识信息
     this.node_id = process.env.SINGED_NODE_ID;
+    // 任务数上限，超过此数值，不再接受新任务
     this.task_limit = process.env.SINGED_TASK_LIMIT;
+    // Redis服务访问点
     this.redis_url = process.env.SINGED_REDIS_URL;
+    // 新下达任务队列名
     this.task_queue_name = process.env.SINGED_TASK_QUEUE;
+    // 现有任务变更请求通道名
     this.task_chg_req_channel_name = process.env.SINGED_TASK_CHG_REQ;
+    // 现有任务变更返回通道名
     this.task_chg_res_channel_name = process.env.SINGED_TASK_CHG_RES;
+    // 任务状态表名
     this.task_stat_table_name = process.env.SINGED_TASK_STAT;
+    // 节点状态表名
     this.node_stat_table_name = process.env.SINGED_NODE_STAT;
-    this.chk_task_interval_time = process.env.SINGED_CHK_TASK_INTERVAL;
-    this.update_node_stat_interval_time = process.env.SINGED_UPDATE_NODE_STAT_INTERVAL;
+    // 检查新任务的时间间隔(毫秒)
+    this.chk_new_task_interval_ms = process.env.SINGED_CHK_NEW_TASK_INTERVAL_MS;
+    // 更新节点状态的时间间隔(毫秒)
+    this.node_stat_update_interval_ms = process.env.SINGED_NODE_STAT_UPDATE_INTERVAL_MS;
 
     this.node_stat = {};
     this.node_tasks = [];
@@ -22,7 +38,9 @@ class Hive {
 
     this.chk_task_interval = null;
     this.update_node_stat_interval = null;
-    this.start_timestamp = Math.floor(Date.now() / 1000)
+    // 节点开始时间戳
+    this.start_ts = Date.now()
+    // 节点上线持续时间
     this.uptime = 0
 
     // read node stat table for resume tasks
@@ -44,21 +62,7 @@ class Hive {
               "节点初始化：没能根据node_id找到node_stat."
             );
 
-            // 找不到旧的node_stat, 生成新的node_stat
-            this.node_stat = {
-              NODE_ID: this.node_id,
-              UPTIME: 0,
-              TASK_LIMIT: this.task_limit,
-              TASK_COUNT: 0,
-              REDIS_URL: this.redis_url,
-              TASK_QUEUE: this.task_queue_name,
-              TASK_CHG_REQ_CHANNEL: this.task_chg_req_channel_name,
-              TASK_CHG_RES_CHANNEL: this.task_chg_res_channel_name,
-              TASK_STAT_TABLE: this.task_stat_table_name,
-              NODE_STAT_TABLE: this.node_stat_table_name,
-              TASK_LIST: []
-            };
-            // 在node_stat_table中，没有找到node_id, 更新TASK_LIST为空的node_stat到node_stat_table
+            // 用节点的当前状态更新 node_stat ,并更新节点状态表 node_stat_table_name
             update_node_stat();
 
           } else {
@@ -85,7 +89,7 @@ class Hive {
             step: "没找到node_stat_table_name.",
             node_stat: this.node_stat,
           },
-          "节点初始化：没找到node_stat表,系统运行设置不正确."
+          "节点初始化：没找到node_stat表,系统运行设置不正确,基础设施不完备,节点拒绝启动."
         );
         this.redis.quit();
         logger.info(
@@ -175,7 +179,7 @@ class Hive {
     // 听Task Queue接受新任务
     this.chk_task_interval = setInterval(
       this.chk_new_task,
-      this.chk_task_interval_time
+      this.chk_new_task_interval_ms
     );
     logger.info(
       {
@@ -191,7 +195,7 @@ class Hive {
     // 设置定时更新node_stat_table
     this.update_node_stat_interval = setInterval(
       this.update_node_stat,
-      this.update_node_stat_interval_time
+      this.node_stat_update_interval_ms
     );
     logger.info(
       {
@@ -208,7 +212,8 @@ class Hive {
   chk_new_task() {
     if (this.bees.length < this.task_limit) {
       // 监听任务队列
-      this.redis.lpop(this.task_queue_name, 0, (err, res) => {
+      this.redis.brpop(this.task_queue_name, 0, (err, res) => {
+
         if (err) {
           logger.error(
             {
@@ -220,9 +225,23 @@ class Hive {
             },
             "监听任务队列失败(task_queue_name)."
           );
+
+          throw err;
+
         } else {
+
           // 从任务队列中取出任务
           let task = JSON.parse(res[1]);
+
+          // 检查是否是采集任务，酿造任务需要退回队列
+          if (task.TYPE == "Parser") {
+            // 退回任务队列
+            this.redis.lpush(this.task_queue_name, JSON.stringify(task));
+
+            return;
+
+          }
+
           logger.info(
             {
               node_id: this.node_id,
@@ -233,26 +252,53 @@ class Hive {
             },
             "从任务队列中取出任务."
           );
-          // 生成新的bee
-          const bee = new Bee(task);
-          // 启动bee
-          bee.start();
-          // 加入bees
-          this.bees.push(bee);
-          logger.info(
-            {
-              node_id: this.node_id,
-              task_queue_name: this.task_queue_name,
-              func: "Hive->chk_new_task",
-              step: "启动bee成功.",
-              bee: bee,
-            },
-            "启动新bee."
-          );
 
-          // 增加新Task，启动新的Bee，更新node_stat
-          update_node_stat();
-        }
+          if (task.ACTION == "TaskStop") {
+
+            // 停止任务
+            stop_bee(task.TASKID);
+
+            // 停止任务，更新node_stat
+            update_node_stat();
+
+          } else if (task.ACTION == "Start") {
+
+            // 生成新的bee，完成采集任务
+            const bee = new Bee(task);
+            // 启动bee
+            bee.start();
+            // 加入bees
+            this.bees.push(bee);
+            logger.info(
+              {
+                node_id: this.node_id,
+                task_queue_name: this.task_queue_name,
+                func: "Hive->chk_new_task",
+                step: "启动bee成功.",
+                bee: bee,
+              },
+              "启动新bee."
+            );
+
+            // 增加新Task，启动新的Bee，更新node_stat
+            update_node_stat();
+
+          } else {
+            logger.error(
+              {
+                node_id: this.node_id,
+                task_queue_name: this.task_queue_name,
+                func: "Hive->chk_new_task",
+                step: "任务类型错误.",
+                task: task,
+              },
+              "任务类型错误."
+            );
+
+            throw new Error("Task Type Err");
+
+          } // end of if (task.ACTION == "TaskStop")
+        } // end of 取任务
       });
     }
   } // end of chk_new_task
@@ -261,8 +307,8 @@ class Hive {
 
     // 更新node_stat中的node信息
     this.node_stat.NODE_ID = this.node_id
-    this.node_stat.UPTIME = Math.floor(Date.now() / 1000) - this.start_timestamp
-    this.uptime = this.node_stat.UPTIME
+    this.node_stat.START_TS = this.start_ts
+    this.node_stat.UPTIME = Date.now() - this.start_ts
     this.node_stat.TASK_LIMIT = this.task_limit
     this.node_stat.TASK_COUNT = this.bees.length
     this.node_stat.REDIS_URL = this.redis_url
@@ -272,11 +318,13 @@ class Hive {
     this.node_stat.TASK_STAT_TABLE = this.task_stat_table_name
     this.node_stat.NODE_STAT_TABLE = this.node_stat_table_name
 
+    this.uptime = this.node_stat.UPTIME
+
     // 更新node_stat中的task信息
     if (this.bees.length > 0) {
       this.node_stat.TASK_LIST = this.bees.map((bee) => {
         return {
-          ID: bee.task.ID,
+          ID: bee.task.TASKID,
           TYPE: bee.task.TYPE,
           NAME: bee.task.NAME,
           DESC: bee.task.DESC,
@@ -328,7 +376,7 @@ class Hive {
   } // end of update_node_stat
 
   stop_bee(bee_id) {
-    // 停止bee
+    // 停止Bee
     this.bees.filter((bee) => bee.id == bee_id)[0].stop();
     logger.info(
       {
@@ -395,6 +443,19 @@ class Hive {
       },
       "节点Stop, node_stat_table中对应记录."
     );
+
+    clearInterval(this.update_node_stat_interval);
+    logger.info(
+      {
+        node_id: this.node_id,
+        task_queue_name: this.task_queue_name,
+        func: "Hive->stop",
+        step: "Hive停止节点状态更新成功.",
+        chk_task_interval: this.update_node_stat_interval,
+      },
+      "Hive停止节点状态更新."
+    );
+
   } // end of stop
 } // end of class Hive
 

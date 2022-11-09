@@ -22,5 +22,5 @@ module.exports = pinoLogger(
       },
     },
   },
-  pinoLogger.destination(`${__dirname}/fake_bee.log`)
+  pinoLogger.destination(`${__dirname}/bumblebee.log`)
 );
