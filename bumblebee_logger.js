@@ -13,6 +13,7 @@ const levels = {
 
 module.exports = pinoLogger(
   {
+    name: "bumblebee",
     level: process.env.PINO_LOG_LEVEL || "info",
     customLevels: levels,
     useOnlyCustomLevels: true,

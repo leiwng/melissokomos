@@ -8,9 +8,34 @@
 const Redis = require("ioredis");
 const Bee = require("./bee");
 const logger = require("./hive_logger");
+require('dotenv').config()
+
 
 class Hive {
+
   constructor() {
+
+    // member functions
+    this.init = this.init.bind(this);
+    this.stop_bee = this.stop_bee.bind(this);
+    this.start = this.start.bind(this);
+    this.stop = this.stop.bind(this);
+    this.chk_new_task = this.chk_new_task.bind(this);
+    this.update_node_stat = this.update_node_stat.bind(this);
+    this.get_node_stat = this.get_node_stat.bind(this);
+    this.get_tasks_from_node_stat = this.get_tasks_from_node_stat.bind(this);
+    this.resume_tasks = this.resume_tasks.bind(this);
+
+    // constructor operations
+    this.init();
+    this.get_node_stat();
+    this.get_tasks_from_node_stat();
+    this.resume_tasks();
+
+  }
+
+  init() {
+
     // 从env中获取运行的基础设施和基本标识信息
     this.node_id = process.env.SINGED_NODE_ID;
     // 任务数上限，超过此数值，不再接受新任务
@@ -44,8 +69,24 @@ class Hive {
     this.uptime = 0
 
     // read node stat table for resume tasks
-    this.redis = new Redis(this.redis_url);
+    try {
+      this.redis = new Redis(this.redis_url);
+    } catch (err) {
+      logger.error(
+        {
+          node_id: this.node_id,
+          func: "init in Constructor of Hive class",
+          step: "create redis client",
+          redis_url: this.redis_url,
+          err: err,
+        },
+        "Redis connection error: "
+      );
+      process.exit(1);
+    }
+  } // end of init
 
+  get_node_stat() {
     // get node stat
     this.redis.exists(this.node_stat_table_name).then((res) => {
       if (res == 1) {
@@ -63,7 +104,7 @@ class Hive {
             );
 
             // 用节点的当前状态更新 node_stat ,并更新节点状态表 node_stat_table_name
-            update_node_stat();
+            this.update_node_stat();
 
           } else {
             this.node_stat = JSON.parse(res);
@@ -89,25 +130,28 @@ class Hive {
             step: "没找到node_stat_table_name.",
             node_stat: this.node_stat,
           },
-          "节点初始化：没找到node_stat表,系统运行设置不正确,基础设施不完备,节点拒绝启动."
+          "节点初始化：没找到node_stat表."
         );
-        this.redis.quit();
-        logger.info(
-          {
-            node_id: this.node_id,
-            node_stat_table_name: this.node_stat_table_name,
-            func: "Hive->constructor",
-            step: "关闭redis连接,准备退出.",
-            node_stat: this.node_stat,
-          },
-          "节点初始化：关闭redis连接,准备退出."
-        );
-        process.exit(1);
+        // this.redis.quit();
+        // logger.info(
+        //   {
+        //     node_id: this.node_id,
+        //     node_stat_table_name: this.node_stat_table_name,
+        //     func: "Hive->constructor",
+        //     step: "关闭redis连接,准备退出.",
+        //     node_stat: this.node_stat,
+        //   },
+        //   "节点初始化：关闭redis连接,准备退出."
+        // );
+        // process.exit(1);
       }
     });
+  } // end of get_node_stat
 
+  get_tasks_from_node_stat() {
     // get tasks from node stat
-    if (this.node_stat != {}) {
+
+    if (Object.keys(this.node_stat).length !== 0) {
       // get node tasks from node statues table
       this.node_tasks = this.node_stat.TASK_LIST;
       logger.info(
@@ -133,9 +177,12 @@ class Hive {
         "节点初始化：从node_stat中没找到node_tasks."
       );
     }
+  } // end of get_tasks_from_node_stat
+
+  resume_tasks() {
 
     // 根据tasks生成bees
-    if (this.node_tasks != []) {
+    if (this.node_tasks.length > 0) {
       // 创建bees
       this.bees = this.node_tasks.map((task) => new Bee(task));
       logger.info(
@@ -173,7 +220,7 @@ class Hive {
         "节点初始化：没有遗留的task, bees=[]."
       );
     }
-  } // end of constructor
+  } // end of resume_tasks
 
   start() {
     // 听Task Queue接受新任务
@@ -259,7 +306,7 @@ class Hive {
             stop_bee(task.TASKID);
 
             // 停止任务，更新node_stat
-            update_node_stat();
+            this.update_node_stat();
 
           } else if (task.ACTION == "Start") {
 
@@ -281,7 +328,7 @@ class Hive {
             );
 
             // 增加新Task，启动新的Bee，更新node_stat
-            update_node_stat();
+            this.update_node_stat();
 
           } else {
             logger.error(
@@ -456,7 +503,10 @@ class Hive {
       "Hive停止节点状态更新."
     );
 
+    this.redis.disconnect()
+
   } // end of stop
+
 } // end of class Hive
 
 const hive = new Hive();

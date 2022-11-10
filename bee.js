@@ -17,7 +17,6 @@ class Bee {
   constructor(task) {
 
     if (task.TYPE == 'Agent') {
-      if 
       return new MasonBee(task)
     } else if (task.TYPE == 'Active') {
       return new CuckooBee(task)
