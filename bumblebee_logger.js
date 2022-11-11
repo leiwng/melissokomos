@@ -13,7 +13,7 @@ const levels = {
 
 module.exports = pinoLogger(
   {
-    name: "bumblebee",
+    name: "BumbleBee",
     level: process.env.PINO_LOG_LEVEL || "info",
     customLevels: levels,
     useOnlyCustomLevels: true,
@@ -23,5 +23,5 @@ module.exports = pinoLogger(
       },
     },
   },
-  pinoLogger.destination(`${__dirname}/bumblebee.log`)
+  pinoLogger.destination(`${__dirname}/melissokomos.log`)
 );

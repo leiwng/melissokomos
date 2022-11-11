@@ -312,10 +312,13 @@ class Hive {
 
             // 生成新的bee，完成采集任务
             const bee = new Bee(task);
+
             // 启动bee
             bee.start();
+
             // 加入bees
             this.bees.push(bee);
+            
             logger.info(
               {
                 node_id: this.node_id,
