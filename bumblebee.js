@@ -72,7 +72,7 @@ class Bumblebee {
     this.ssh = new Client();
 
     // setup connection
-    Promise.promisifyAll(this.ssh)
+    // Promise.promisifyAll(this.ssh)
 
     this.ssh_data_buffer = ''
     this.ssh_status = 'connecting'
