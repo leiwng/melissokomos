@@ -132,6 +132,8 @@ class Hive {
           },
           "节点初始化：没找到node_stat表."
         );
+
+        // 没有node_stat表没太大关系,节点启动后把状态push到redis上也OK.
         // this.redis.quit();
         // logger.info(
         //   {
@@ -191,7 +193,7 @@ class Hive {
           node_stat_table_name: this.node_stat_table_name,
           func: "Hive->constructor",
           step: "根据node_tasks创建bees成功.",
-          bees: this.bees,
+          bees_length: this.bees.length,
         },
         "节点初始化：根据node_stat中的tasks生成bees."
       );
@@ -203,7 +205,7 @@ class Hive {
           node_stat_table_name: this.node_stat_table_name,
           func: "Hive->constructor",
           step: "启动bees成功.",
-          bees: this.bees,
+          bees_length: this.bees.length,
         },
         "节点初始化：启动Bees恢复采集成功."
       );
@@ -215,7 +217,7 @@ class Hive {
           node_stat_table_name: this.node_stat_table_name,
           func: "Hive->constructor",
           step: "准备根据node_stat中的node_tasks创建bees恢复采集，但node_tasks为空.",
-          bees: this.bees,
+          bees_length: this.bees.length,
         },
         "节点初始化：没有遗留的task, bees=[]."
       );
@@ -234,7 +236,7 @@ class Hive {
         task_queue_name: this.task_queue_name,
         func: "Hive->start",
         step: "启动chk_new_task定时器成功.",
-        chk_task_interval: this.chk_task_interval,
+        chk_task_interval: "this.chk_task_interval",
       },
       "节点启动：开始监听任务队列."
     );
@@ -250,7 +252,7 @@ class Hive {
         node_stat_table_name: this.node_stat_table_name,
         func: "Hive->start",
         step: "启动update_node_stat定时器成功.",
-        update_node_stat_interval: this.update_node_stat_interval,
+        update_node_stat_interval: "this.update_node_stat_interval",
       },
       "节点启动：开始定时更新node_stat."
     );
@@ -295,7 +297,8 @@ class Hive {
               task_queue_name: this.task_queue_name,
               func: "Hive->chk_new_task",
               step: "监听任务队列成功.",
-              task: task,
+              task_id: task.TASKID,
+              task_name: task.NAME
             },
             "从任务队列中取出任务."
           );
@@ -318,14 +321,15 @@ class Hive {
 
             // 加入bees
             this.bees.push(bee);
-            
+
             logger.info(
               {
                 node_id: this.node_id,
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
                 step: "启动bee成功.",
-                bee: bee,
+                bee_id: bee.id,
+                bee_name: bee.name
               },
               "启动新bee."
             );
@@ -340,7 +344,8 @@ class Hive {
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
                 step: "任务类型错误.",
-                task: task,
+                task_id: task.TASKID,
+                task_name: task.NAME
               },
               "任务类型错误."
             );
@@ -426,15 +431,18 @@ class Hive {
   } // end of update_node_stat
 
   stop_bee(bee_id) {
+
     // 停止Bee
-    this.bees.filter((bee) => bee.id == bee_id)[0].stop();
+    bee_need_stop = this.bees.filter((bee) => bee.id == bee_id)[0]
+    bee_need_stop.stop();
+
     logger.info(
       {
         node_id: this.node_id,
         func: "Hive->stop_bee",
-        bee_id: bee_id,
         step: "停止bee成功.",
-        bee: this.bees.filter((bee) => bee.id == bee_id)[0],
+        bee_id: bee_id,
+        bee_name: bee_need_stop.name,
       },
       "停止指定bee."
     );
@@ -445,9 +453,9 @@ class Hive {
       {
         node_id: this.node_id,
         func: "Hive->stop_bee",
-        bee_id: bee_id,
         step: "从Hive中删除bee成功.",
-        bees: this.bees,
+        bee_id: bee_id,
+        bees_name: this.bees.name,
       },
       "Bee停止后从Hive中删除."
     );
@@ -462,7 +470,7 @@ class Hive {
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
         step: "Hive停止监听任务队列成功.",
-        chk_task_interval: this.chk_task_interval,
+        chk_task_interval: "this.chk_task_interval",
       },
       "Hive停止监听任务队列."
     );
@@ -476,7 +484,7 @@ class Hive {
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
         step: "Hive停止所有bees成功.",
-        bees: this.bees,
+        bees_length: this.bees.length,
       },
       "停止Hive中的所有Bees."
     );
@@ -501,7 +509,7 @@ class Hive {
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
         step: "Hive停止节点状态更新成功.",
-        chk_task_interval: this.update_node_stat_interval,
+        chk_task_interval: "this.update_node_stat_interval",
       },
       "Hive停止节点状态更新."
     );
