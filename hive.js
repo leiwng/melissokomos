@@ -317,7 +317,8 @@ class Hive {
             const bee = new Bee(task);
 
             // 启动bee
-            bee.start();
+            // 不由外部来启动Bee开始工作，有Bee内部根据TASK的内容和当前情况决定是否start work
+            // bee.start();
 
             // 加入bees
             this.bees.push(bee);
@@ -421,7 +422,8 @@ class Hive {
               node_stat_table_name: this.node_stat_table_name,
               func: "Hive->update_node_stat",
               step: "更新node_stat成功.",
-              node_stat: this.node_stat
+              node_stat: this.node_stat,
+              hset_response: res
             },
             "更新node_stat成功."
           );

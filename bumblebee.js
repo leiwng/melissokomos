@@ -70,8 +70,12 @@ class Bumblebee {
     this.pub_channel = task.OUTPUT.CHANNEL
 
     this.ssh = new Client();
+
+    // setup connection
+    Promise.promisifyAll(this.ssh)
+
     this.ssh_data_buffer = ''
-    this.ssh_status = 'disconnected'
+    this.ssh_status = 'connecting'
 
     this.line_counter = 0
 
@@ -94,7 +98,9 @@ class Bumblebee {
   } // end of init
 
   ssh_on_ready() {
+
     this.ssh_status = 'ready'
+
     logger.info(
       {
         bee_id: this.id,
@@ -108,6 +114,12 @@ class Bumblebee {
       },
       'Bumblebee, SSH on ready'
     );
+
+    // ssh 链路ready，可以开始采集工作
+    if (this.action == "Start") {
+      this.start()
+    }
+
   }
 
   ssh_on_error(err) {
