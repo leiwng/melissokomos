@@ -32,7 +32,9 @@ class Bumblebee {
     // 部署任务
     this.ssh
       .on('ready', this.ssh_on_ready)
-      .on('error', this.ssh_on_error)
+      .on('error', (err) => {
+        console.log('ssh error: ' + err)
+      })
       .on('end', this.ssh_on_end)
       .on('close', this.ssh_on_close)
       .on('keyboard-interactive', this.ssh_on_keyboard_interactive)
