@@ -32,9 +32,7 @@ class Bumblebee {
     // 部署任务
     this.ssh
       .on('ready', this.ssh_on_ready)
-      .on('error', (err) => {
-        console.log('ssh error: ' + err)
-      })
+      .on('error', this.ssh_on_error)
       .on('end', this.ssh_on_end)
       .on('close', this.ssh_on_close)
       .on('keyboard-interactive', this.ssh_on_keyboard_interactive)
@@ -247,7 +245,7 @@ class Bumblebee {
         if (this.ssh_data_buffer !== '') {
 
           let now = new Date()
-          data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: this.ssh_data_buffer })
+          const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: this.ssh_data_buffer })
 
           // 按行PUB出去
           this.pub.publish(this.pub_channel, data_line)
@@ -281,7 +279,7 @@ class Bumblebee {
       // 收到回车符，有多行数据待处理，且只处理到倒数第二行
       let now = new Date()
       for (let i = 0; i < lines.length - 1; i++) {
-        data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[i] })
+        const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[i] })
 
         // 按行PUB出去
         this.pub.publish(this.pub_channel, data_line)
@@ -291,7 +289,7 @@ class Bumblebee {
       }
       // 最后一行数据，如果以回车符结束，就清空缓存，否则缓存起来
       if (end_with_LF) {
-        data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[lines.length - 1] })
+        const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[lines.length - 1] })
 
         // 按行PUB出去
         this.pub.publish(this.pub_channel, data_line)
