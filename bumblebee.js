@@ -124,7 +124,7 @@ class Bumblebee {
 
   ssh_on_error(err) {
     this.ssh_status = 'error'
-    this.ssh.end();
+    console.log(err)
     logger.error(
       {
         bee_id: this.id,
@@ -135,10 +135,11 @@ class Bumblebee {
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status,
-        error: err
+        error: JSON.stringify(err)
       },
       'Bumblebee, SSH on error'
     );
+    this.ssh.end();
   }
 
   ssh_on_end() {
