@@ -1,40 +1,40 @@
 /***
- * Hive 负责启动 Bee 从远程目标机上获取数据，包括日志数据和执行 shell script 的结果数据
- * Hive 实现数据采集的自管理 self-management，包括：
- * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动停止接受新的采集任务
- * 2. 自动读取采集任务,并交由 Bee 执行
+ * Brewer 根据特定的 Recipe 来酿造 Honey
+ * Brewer 实现 Honey 酿造的自管理 self-management，功能包括：
+ * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动停止接受新的酿造任务
+ * 2. 自动读取酿造任务,并执行特定的 Recipe 完成 Honey 的酿造
  * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
 ***/
+const { fork } = require('node:child_process');
 const Redis = require("ioredis");
-const Bee = require("./bee");
-const logger = require("./hive_logger");
+const Recipe = require("./recipe");
+const logger = require("./brewer_logger");
 require('dotenv').config()
 
-
-class Hive {
-
+class Brewer {
   constructor() {
-
     // member functions
     this.init = this.init.bind(this);
-    this.stop_bee = this.stop_bee.bind(this);
     this.start = this.start.bind(this);
     this.stop = this.stop.bind(this);
+    this.stop_recipe = this.stop_recipe.bind(this);
+
     this.chk_new_task = this.chk_new_task.bind(this);
     this.update_node_stat = this.update_node_stat.bind(this);
+
     this.get_node_stat = this.get_node_stat.bind(this);
     this.get_tasks_from_node_stat = this.get_tasks_from_node_stat.bind(this);
     this.resume_tasks = this.resume_tasks.bind(this);
-
     // constructor operations
     this.init();
     this.get_node_stat();
     this.get_tasks_from_node_stat();
     this.resume_tasks();
-
   }
 
   init() {
+    // 节点类型, Collector or Parser
+    this.node_type = "Parser";
 
     // 从env中获取运行的基础设施和基本标识信息
     this.node_id = process.env.SINGED_NODE_ID;
@@ -59,7 +59,7 @@ class Hive {
 
     this.node_stat = {};
     this.node_tasks = [];
-    this.bees = [];
+    this.recipes = [];
 
     this.chk_task_interval = null;
     this.update_node_stat_interval = null;
@@ -68,14 +68,15 @@ class Hive {
     // 节点上线持续时间
     this.uptime = 0
 
-    // read node stat table for resume tasks
+    // create Redis Client
     try {
       this.redis = new Redis(this.redis_url);
     } catch (err) {
       logger.error(
         {
           node_id: this.node_id,
-          func: "init in Constructor of Hive class",
+          node_type: this.node_type,
+          func: "init in Constructor of Brewer class",
           step: "create redis client",
           redis_url: this.redis_url,
           err: err,
@@ -84,7 +85,8 @@ class Hive {
       );
       process.exit(1);
     }
-  } // end of init
+
+  } // end of init()
 
   get_node_stat() {
     // get node stat
@@ -95,8 +97,9 @@ class Hive {
             logger.error(
               {
                 node_id: this.node_id,
+                node_type: this.node_type,
                 node_stat_table_name: this.node_stat_table_name,
-                func: "Hive->constructor",
+                func: "get_node_stat",
                 step: "找到node_stat_table_name，但是根据node_id读取node_stat失败.",
                 err: err,
               },
@@ -111,8 +114,9 @@ class Hive {
             logger.info(
               {
                 node_id: this.node_id,
+                node_type: this.node_type,
                 node_stat_table_name: this.node_stat_table_name,
-                func: "Hive->constructor",
+                func: "get_node_stat",
                 step: "找到node_stat_table_name，根据node_id读取node_stat成功.",
                 node_stat: this.node_stat,
               },
@@ -125,42 +129,30 @@ class Hive {
         logger.error(
           {
             node_id: this.node_id,
+            node_type: this.node_type,
             node_stat_table_name: this.node_stat_table_name,
-            func: "Hive->constructor",
+            func: "get_node_stat",
             step: "没找到node_stat_table_name.",
             node_stat: this.node_stat,
           },
           "节点初始化：没找到node_stat表."
         );
-
         // 没有node_stat表没太大关系,节点启动后把状态push到redis上也OK.
-        // this.redis.quit();
-        // logger.info(
-        //   {
-        //     node_id: this.node_id,
-        //     node_stat_table_name: this.node_stat_table_name,
-        //     func: "Hive->constructor",
-        //     step: "关闭redis连接,准备退出.",
-        //     node_stat: this.node_stat,
-        //   },
-        //   "节点初始化：关闭redis连接,准备退出."
-        // );
-        // process.exit(1);
       }
     });
   } // end of get_node_stat
 
   get_tasks_from_node_stat() {
     // get tasks from node stat
-
     if (Object.keys(this.node_stat).length !== 0) {
       // get node tasks from node statues table
       this.node_tasks = this.node_stat.TASK_LIST;
       logger.info(
         {
           node_id: this.node_id,
+          node_type: this.node_type,
           node_stat_table_name: this.node_stat_table_name,
-          func: "Hive->constructor",
+          func: "get_tasks_from_node_stat",
           step: "从node_stat中读取node_tasks成功.",
           node_tasks: this.node_tasks,
         },
@@ -171,8 +163,9 @@ class Hive {
       logger.info(
         {
           node_id: this.node_id,
+          node_type: this.node_type,
           node_stat_table_name: this.node_stat_table_name,
-          func: "Hive->constructor",
+          func: "get_tasks_from_node_stat",
           step: "准备从node_stat中读取node_tasks，但node_stat为空.",
           node_tasks: this.node_tasks,
         },
@@ -182,44 +175,46 @@ class Hive {
   } // end of get_tasks_from_node_stat
 
   resume_tasks() {
-
-    // 根据tasks生成bees
+    // 根据tasks找到对应的recipe,并执行
     if (this.node_tasks.length > 0) {
-      // 创建bees
-      this.bees = this.node_tasks.map((task) => new Bee(task));
+      // 创建recipes
+      this.recipes = this.node_tasks.map((task) => new Recipe(task));
       logger.info(
         {
           node_id: this.node_id,
+          node_type: this.node_type,
           node_stat_table_name: this.node_stat_table_name,
-          func: "Hive->constructor",
-          step: "根据node_tasks创建bees成功.",
-          bees_length: this.bees.length,
+          func: "resume_tasks",
+          step: "根据node_tasks创建recipes成功.",
+          recipes_length: this.recipes.length,
         },
-        "节点初始化：根据node_stat中的tasks生成bees."
+        "节点初始化：根据node_stat中的tasks生成recipes."
       );
-      // 启动采集
-      this.bees.forEach((bee) => bee.start());
+      // 启动酿造
+      this.recipes.forEach((recipe) => recipe.start());
       logger.info(
         {
           node_id: this.node_id,
+          node_type: this.node_type,
           node_stat_table_name: this.node_stat_table_name,
-          func: "Hive->constructor",
-          step: "启动bees成功.",
-          bees_length: this.bees.length,
+          func: "resume_tasks",
+          step: "启动recipes成功.",
+          recipes_length: this.recipes.length,
         },
-        "节点初始化：启动Bees恢复采集成功."
+        "节点初始化：启动Recipes恢复酿造成功."
       );
     } else {
-      this.bees = [];
+      this.recipes = [];
       logger.info(
         {
           node_id: this.node_id,
+          node_type: this.node_type,
           node_stat_table_name: this.node_stat_table_name,
-          func: "Hive->constructor",
-          step: "准备根据node_stat中的node_tasks创建bees恢复采集，但node_tasks为空.",
-          bees_length: this.bees.length,
+          func: "resume_tasks",
+          step: "准备根据node_stat中的node_tasks创建recipes恢复酿造，但node_tasks为空.",
+          recipes_length: this.recipes.length,
         },
-        "节点初始化：没有遗留的task, bees=[]."
+        "节点初始化：没有遗留的task, recipes=[]."
       );
     }
   } // end of resume_tasks
@@ -233,6 +228,7 @@ class Hive {
     logger.info(
       {
         node_id: this.node_id,
+        node_type: this.node_type,
         task_queue_name: this.task_queue_name,
         func: "Hive->start",
         step: "启动chk_new_task定时器成功.",
@@ -249,6 +245,7 @@ class Hive {
     logger.info(
       {
         node_id: this.node_id,
+        node_type: this.node_type,
         node_stat_table_name: this.node_stat_table_name,
         func: "Hive->start",
         step: "启动update_node_stat定时器成功.",
@@ -259,7 +256,7 @@ class Hive {
   } // end of start
 
   chk_new_task() {
-    if (this.bees.length < this.task_limit) {
+    if (this.recipes.length < this.task_limit) {
       // 监听任务队列
       this.redis.brpop(this.task_queue_name, 0, (err, res) => {
 
@@ -267,6 +264,7 @@ class Hive {
           logger.error(
             {
               node_id: this.node_id,
+              node_type: this.node_type,
               task_queue_name: this.task_queue_name,
               func: "Hive->chk_new_task",
               step: "监听任务队列失败.",
@@ -282,7 +280,7 @@ class Hive {
           // 从任务队列中取出任务
           let task = JSON.parse(res[1]);
 
-          // 检查是否是采集任务，酿造任务需要退回队列
+          // 检查是否是酿造任务，酿造任务需要退回队列
           if (task.TYPE == "Parser") {
             // 退回任务队列
             this.redis.lpush(this.task_queue_name, JSON.stringify(task));
@@ -294,6 +292,7 @@ class Hive {
           logger.info(
             {
               node_id: this.node_id,
+              node_type: this.node_type,
               task_queue_name: this.task_queue_name,
               func: "Hive->chk_new_task",
               step: "监听任务队列成功.",
@@ -306,42 +305,44 @@ class Hive {
           if (task.ACTION == "TaskStop") {
 
             // 停止任务
-            stop_bee(task.TASKID);
+            stop_recipe(task.TASKID);
 
             // 停止任务，更新node_stat
             this.update_node_stat();
 
           } else if (task.ACTION == "Start") {
 
-            // 生成新的bee，完成采集任务
-            const bee = new Bee(task);
+            // 生成新的recipe，完成酿造任务
+            const recipe = new Recipe(task);
 
-            // 启动bee
-            // 不由外部来启动Bee开始工作，有Bee内部根据TASK的内容和当前情况决定是否start work
-            // bee.start();
+            // 启动recipe
+            // 不由外部来启动Recipe开始工作，有Recipe内部根据TASK的内容和当前情况决定是否start work
+            // recipe.start();
 
-            // 加入bees
-            this.bees.push(bee);
+            // 加入recipes
+            this.recipes.push(recipe);
 
             logger.info(
               {
                 node_id: this.node_id,
+                node_type: this.node_type,
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
-                step: "启动bee成功.",
-                bee_id: bee.id,
-                bee_name: bee.name
+                step: "启动recipe成功.",
+                recipe_id: recipe.id,
+                recipe_name: recipe.name
               },
-              "启动新bee."
+              "启动新recipe."
             );
 
-            // 增加新Task，启动新的Bee，更新node_stat
+            // 增加新Task，启动新的Recipe，更新node_stat
             this.update_node_stat();
 
           } else {
             logger.error(
               {
                 node_id: this.node_id,
+                node_type: this.node_type,
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
                 step: "任务类型错误.",
@@ -363,10 +364,11 @@ class Hive {
 
     // 更新node_stat中的node信息
     this.node_stat.NODE_ID = this.node_id
+    this.node_stat.NODE_TYPE = this.node_type
     this.node_stat.START_TS = this.start_ts
     this.node_stat.UPTIME = Date.now() - this.start_ts
     this.node_stat.TASK_LIMIT = this.task_limit
-    this.node_stat.TASK_COUNT = this.bees.length
+    this.node_stat.TASK_COUNT = this.recipes.length
     this.node_stat.REDIS_URL = this.redis_url
     this.node_stat.TASK_QUEUE = this.task_queue_name
     this.node_stat.TASK_CHG_REQ_CHANNEL = this.task_chg_req_channel_name
@@ -377,21 +379,21 @@ class Hive {
     this.uptime = this.node_stat.UPTIME
 
     // 更新node_stat中的task信息
-    if (this.bees.length > 0) {
-      this.node_stat.TASK_LIST = this.bees.map((bee) => {
+    if (this.recipes.length > 0) {
+      this.node_stat.TASK_LIST = this.recipes.map((recipe) => {
         return {
-          ID: bee.task.TASKID,
-          TYPE: bee.task.TYPE,
-          NAME: bee.task.NAME,
-          DESC: bee.task.DESC,
+          ID: recipe.task.TASKID,
+          TYPE: recipe.task.TYPE,
+          NAME: recipe.task.NAME,
+          DESC: recipe.task.DESC,
 
-          INPUT: bee.task.INPUT,
-          OUTPUT: bee.task.OUTPUT,
+          INPUT: recipe.task.INPUT,
+          OUTPUT: recipe.task.OUTPUT,
 
-          STATE: bee.ssh_status,
-          STATE_DESC: bee.ssh_status,
-          UPTIME: bee.uptime,
-          WORK_COUNT: bee.line_counter,
+          STATE: recipe.ssh_status,
+          STATE_DESC: recipe.ssh_status,
+          UPTIME: recipe.uptime,
+          WORK_COUNT: recipe.line_counter,
         };
       });
     } else {
@@ -408,6 +410,7 @@ class Hive {
           logger.error(
             {
               node_id: this.node_id,
+              node_type: this.node_type,
               node_stat_table_name: this.node_stat_table_name,
               func: "Hive->update_node_stat",
               step: "更新node_stat失败.",
@@ -419,6 +422,7 @@ class Hive {
           logger.info(
             {
               node_id: this.node_id,
+              node_type: this.node_type,
               node_stat_table_name: this.node_stat_table_name,
               func: "Hive->update_node_stat",
               step: "更新node_stat成功.",
@@ -432,36 +436,38 @@ class Hive {
     );
   } // end of update_node_stat
 
-  stop_bee(bee_id) {
+  stop_recipe(recipe_id) {
 
-    // 停止Bee
-    bee_need_stop = this.bees.filter((bee) => bee.id == bee_id)[0]
-    bee_need_stop.stop();
+    // 停止Recipe
+    recipe_need_stop = this.recipes.filter((recipe) => recipe.id == recipe_id)[0]
+    recipe_need_stop.stop();
 
     logger.info(
       {
         node_id: this.node_id,
-        func: "Hive->stop_bee",
-        step: "停止bee成功.",
-        bee_id: bee_id,
-        bee_name: bee_need_stop.name,
+        node_type: this.node_type,
+        func: "Hive->stop_recipe",
+        step: "停止recipe成功.",
+        recipe_id: recipe_id,
+        recipe_name: recipe_need_stop.name,
       },
-      "停止指定bee."
+      "停止指定recipe."
     );
 
-    // 从bees中删除bee
-    this.bees = this.bees.filter((bee) => bee.id != bee_id);
+    // 从recipes中删除recipe
+    this.recipes = this.recipes.filter((recipe) => recipe.id != recipe_id);
     logger.info(
       {
         node_id: this.node_id,
-        func: "Hive->stop_bee",
-        step: "从Hive中删除bee成功.",
-        bee_id: bee_id,
-        bees_name: this.bees.name,
+        node_type: this.node_type,
+        func: "Hive->stop_recipe",
+        step: "从Hive中删除recipe成功.",
+        recipe_id: recipe_id,
+        recipes_name: this.recipes.name,
       },
-      "Bee停止后从Hive中删除."
+      "Recipe停止后从Hive中删除."
     );
-  } // end of stop_bee
+  } // end of stop_recipe
 
   stop() {
     // 停止监听任务队列
@@ -469,6 +475,7 @@ class Hive {
     logger.info(
       {
         node_id: this.node_id,
+        node_type: this.node_type,
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
         step: "Hive停止监听任务队列成功.",
@@ -477,18 +484,19 @@ class Hive {
       "Hive停止监听任务队列."
     );
 
-    // 停止bees
-    this.bees.forEach((bee) => bee.stop());
-    this.bees = [];
+    // 停止recipes
+    this.recipes.forEach((recipe) => recipe.stop());
+    this.recipes = [];
     logger.info(
       {
         node_id: this.node_id,
+        node_type: this.node_type,
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
-        step: "Hive停止所有bees成功.",
-        bees_length: this.bees.length,
+        step: "Hive停止所有recipes成功.",
+        recipes_length: this.recipes.length,
       },
-      "停止Hive中的所有Bees."
+      "停止Hive中的所有Recipes."
     );
 
     // 删除node_stat
@@ -508,6 +516,7 @@ class Hive {
     logger.info(
       {
         node_id: this.node_id,
+        node_type: this.node_type,
         task_queue_name: this.task_queue_name,
         func: "Hive->stop",
         step: "Hive停止节点状态更新成功.",
@@ -520,7 +529,7 @@ class Hive {
 
   } // end of stop
 
-} // end of class Hive
+} // end of class Brewer
 
-const hive = new Hive();
-hive.start();
+const brewer = new Brewer();
+brewer.start()
