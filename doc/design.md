@@ -187,34 +187,3 @@ sINGED_NODE_STATE_HSET
     ]
 }
 ```
-
-### TASK STATE REPORT
-
-```json
-{
-    "id": "node-id",
-    "type": "hive|cellar",
-    "start-ts": 1674986473492,
-    "uptime": 473492,
-    "task-limit": 10,
-    "task-count": 3,
-    "inner-redis-url": "redis://192.168.0.77:6379/0",
-    "task-req-queue": "task-req-queue",
-    "task-rsp-queue": "task-rsp-queue",
-    "task-stat-hset": "task-stat-hset",
-    "node-stat-hset": "node-stat-hset",
-    "task-list": [
-        {
-            "task-content": {
-                "the copy of task":"the copy of task"
-            },
-            "task-state": {
-                "state": "running|stopped|error",
-                "state-desc": "running|stopped|error desc",
-                "duration": 473492,
-                "work-cnt": 47349278
-            }
-        }
-    ]
-}
-```
