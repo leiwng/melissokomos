@@ -1,7 +1,7 @@
 // Recipe framework, base for all recipes
 
 const Redis = require("ioredis");
-import constants from '../util/constants'
+
 
 class Recipe {
   constructor(msg_handler) {

@@ -60,7 +60,7 @@ AgentTaskSample = {
 
 /***
 1.1.1.2 执行返回
-  - 返回结果 队列名（NODE方发送）：SINGE_TASK_RETURN_QUEUE
+  - 返回结果 队列名（NODE方发送）：SINGED_TASK_RETURN_QUEUE
 ***/
 
 // Agent采集任务返回
@@ -116,7 +116,7 @@ ActiveTaskSample = {
 
 /***
 1.1.2.2 执行返回
-  - 返回结果 队列名（NODE方发送）：SINGE_TASK_RETURN_QUEUE
+  - 返回结果 队列名（NODE方发送）：SINGED_TASK_RETURN_QUEUE
 ***/
 ActiveTaskReturnSample = {
   "TASKID": 11,
@@ -165,7 +165,7 @@ PassiveTaskSample = {
 
 /***
 1.1.3.2 执行返回
-- 返回结果 队列名（NODE方发送）：SINGE_TASK_RETURN_QUEUE
+- 返回结果 队列名（NODE方发送）：SINGED_TASK_RETURN_QUEUE
 ***/
 PassiveTaskReturnSample = {
 "TASKID": 11,
@@ -209,7 +209,7 @@ ParserTaskSample = {
 /***
 1.2. 停止任务
 1.2.1 任务接收
-- 接收命令频道名（NODE方接收）：SINGE_TASK_CHG_REQ
+- 接收命令频道名（NODE方接收）：SINGED_TASK_CHG_REQ_CH
 ***/
 StopTaskSample = {
   "ACTION": "TaskStop",
@@ -226,7 +226,7 @@ StopTaskSample = {
 ***/
 /***
 1.2.2 执行返回
-  - 返回结果 队列名（NODE方发送）：SINGE_TASK_RETURN_QUEUE
+  - 返回结果 队列名（NODE方发送）：SINGED_TASK_RETURN_QUEUE
 ***/
 StopTaskReturnSample = {
     "ACTION": "TaskStop",
@@ -241,7 +241,7 @@ StopTaskReturnSample = {
 2. 节点接口
 
 2.1 节点启动上报
-  - 返回结果 队列名（NODE方发送）：SINGE_NODE_RETURN_QUEUE
+  - 返回结果 队列名（NODE方发送）：SINGED_NODE_RETURN_QUEUE
 ***/
 nodeStartSample = {
     "ACTION": "NodeStarted",
@@ -253,7 +253,7 @@ nodeStartSample = {
 /***
 2.2 改变节点最大任务数
 2.2.1 接收
-  - 接收命令频道名（NODE方接收）：SINGE_NODE_CHG_REQ
+  - 接收命令频道名（NODE方接收）：SINGED_NODE_CHG_REQ
 ***/
 nodeChangeTaskSample = {
   "ACTION": "Change_Num_Task",
@@ -264,7 +264,7 @@ nodeChangeTaskSample = {
 
 /***
 2.2.2 返回
-  - 返回结果 队列名（NODE方发送）：SINGE_NODE_RETURN_QUEUE
+  - 返回结果 队列名（NODE方发送）：SINGED_NODE_RETURN_QUEUE
 ***/
 nodeChangeTaskReturnSample = {
     "ACTION": "Change_Num_Task",

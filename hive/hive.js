@@ -50,13 +50,13 @@ class Hive {
     // 新下达任务队列名
     this.task_queue_name = process.env.SINGED_TASK_QUEUE;
     // 现有任务变更请求通道名
-    this.task_chg_req_channel_name = process.env.SINGED_TASK_CHG_REQ;
+    this.task_chg_req_channel_name = process.env.SINGED_TASK_CHG_REQ_CH;
     // 现有任务变更返回通道名
-    this.task_chg_res_channel_name = process.env.SINGED_TASK_CHG_RES;
+    this.task_chg_res_channel_name = process.env.SINGED_TASK_RETURN_QUEUE;
     // 任务状态表名
-    this.task_stat_table_name = process.env.SINGED_TASK_STAT;
+    this.task_stat_table_name = process.env.SINGED_TASK_STAT_HSET;
     // 节点状态表名
-    this.node_stat_table_name = process.env.SINGED_NODE_STAT;
+    this.node_stat_table_name = process.env.SINGED_NODE_STAT_HSET;
     // 检查新任务的时间间隔(毫秒)
     this.chk_new_task_interval_ms = process.env.SINGED_CHK_NEW_TASK_INTERVAL_MS;
     // 更新节点状态的时间间隔(毫秒)
