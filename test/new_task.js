@@ -2,8 +2,8 @@ const Redis = require("ioredis");
 require('dotenv').config()
 
 task = {
-  TASKID: 13,
-  ACTION: "Start",
+  task_id: 13,
+  action: "Start",
   TYPE: "Passive",
   NAME: "mbank50-APP-Log",
   DESC: "mobile bank 5.0 Application Log",

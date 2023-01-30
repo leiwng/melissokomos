@@ -20,20 +20,21 @@ sINGED_NODE_STATE_HSET
 
 ```json
 {
-    "task_id": "task_id",
+    "id": "id",
+    "name": "name",
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
     "action": "start|stop|chg_task_limit",
     "desc": "task_desc",
-    "input": {
-        "redis-url": "redis://192.168.0.77:6379/0",
+    "in": {
+        "redis_url": "redis://192.168.0.77:6379/0",
         "encoding": "utf-8",
         "parameter": "agent collector parameter string"
     },
-    "output": {
-        "redis-url": "redis://192.168.0.77:6379/0",
-        "redis-pub-ch": "mbank6-customer-78.99.12.11",
+    "out": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_pub_ch": "mbank6-customer-78.99.12.11",
     }
 }
 ```
@@ -44,7 +45,7 @@ sINGED_NODE_STATE_HSET
 {
     "the copy of the task content": "",
     "result": "success|fail",
-    "result-desc": "success|fail reason|error desc"
+    "result_desc": "success|fail reason|error desc"
 }
 ```
 
@@ -54,25 +55,26 @@ sINGED_NODE_STATE_HSET
 
 ```json
 {
-    "task_id": "task_id",
+    "id": "id",
+    "name": "name",
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
     "action": "start|stop|chg_task_limit",
     "desc": "task_desc",
-    "input": {
-        "ssh-host": "98.11.56.21",
-        "ssh-port": 22,
-        "ssh-user": "get-log",
-        "ssh-pass": "get-log123456",
+    "in": {
+        "ssh_host": "98.11.56.21",
+        "ssh_port": 22,
+        "ssh_user": "get-log",
+        "ssh_pass": "get-log123456",
         "encoding": "utf-8",
-        "shell-cmd": "tail -F /var/log/messages",
-        "exec-type": "interval|on-time|one-shot",
+        "shell_cmd": "tail -F /var/log/messages",
+        "exec_type": "interval|on_time|one_shot",
         "trigger": "00:00:00"
     },
-    "output": {
-        "redis-url": "redis://192.168.0.77:6379/0",
-        "redis-pub-ch": "mbank6-customer-78.99.12.11",
+    "out": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_pub_ch": "mbank6-customer-78.99.12.11",
     }
 }
 ```
@@ -83,7 +85,7 @@ sINGED_NODE_STATE_HSET
 {
     "the copy of the task content": "",
     "result": "success|fail",
-    "result-desc": "success|fail reason|error desc"
+    "result_desc": "success|fail reason|error desc"
 }
 ```
 
@@ -93,23 +95,24 @@ sINGED_NODE_STATE_HSET
 
 ```json
 {
-    "task_id": "task_id",
+    "id": "id",
+    "name": "name",
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
     "action": "start|stop|chg_task_limit",
     "desc": "task_desc",
-    "input": {
-        "ssh-host": "98.11.56.21",
-        "ssh-port": 22,
-        "ssh-user": "get-log",
-        "ssh-pass": "get-log123456",
+    "in": {
+        "ssh_host": "98.11.56.21",
+        "ssh_port": 22,
+        "ssh_user": "get-log",
+        "ssh_pass": "get-log123456",
         "encoding": "utf-8",
-        "shell-cmd": "tail -F /var/log/messages",
+        "shell_cmd": "tail -F /var/log/messages",
     },
-    "output": {
-        "redis-url": "redis://192.168.0.77:6379/0",
-        "redis-pub-ch": "mbank6-customer-78.99.12.11",
+    "out": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_pub_ch": "mbank6-customer-78.99.12.11",
     }
 }
 ```
@@ -120,7 +123,7 @@ sINGED_NODE_STATE_HSET
 {
     "the copy of the task content": "",
     "result": "success|fail",
-    "result-desc": "success|fail reason|error desc"
+    "result_desc": "success|fail reason|error desc"
 }
 ```
 
@@ -130,19 +133,20 @@ sINGED_NODE_STATE_HSET
 
 ```json
 {
-    "task_id": "task_id",
+    "id": "id",
+    "name": "name",
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
     "action": "start|stop|chg_task_limit",
     "desc": "task_desc",
-    "input": {
-        "redis-url": "redis://192.168.0.77:6379/0",
-        "redis-sub-ch": "mbank6-customer-78.99.12.11",
+    "in": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_sub-ch": "mbank6-customer-78.99.12.11",
     },
-    "output": {
-        "redis-url": "redis://192.168.0.77:6379/0",
-        "redis-pub-ch": "mbank6-customer-78.99.12.11",
+    "out": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_pub_ch": "mbank6-customer-78.99.12.11",
     }
 }
 ```
@@ -153,7 +157,7 @@ sINGED_NODE_STATE_HSET
 {
     "the copy of the task content": "",
     "result": "success|fail",
-    "result-desc": "success|fail reason|error desc"
+    "result_desc": "success|fail reason|error desc"
 }
 ```
 
@@ -161,27 +165,28 @@ sINGED_NODE_STATE_HSET
 
 ```json
 {
-    "id": "node-id",
+    "id": "node_id",
     "type": "hive|cellar",
-    "start-ts": 1674986473492,
+    "start_ts": 1674986473492,
     "uptime": 473492,
-    "task-limit": 10,
-    "task-count": 3,
-    "inner-redis-url": "redis://192.168.0.77:6379/0",
-    "task-req-queue": "task-req-queue",
-    "task-rsp-queue": "task-rsp-queue",
-    "task-stat-hset": "task-stat-hset",
-    "node-stat-hset": "node-stat-hset",
-    "task-list": [
+    "task_limit": 10,
+    "task_count": 3,
+    "inner_redis_url": "redis://192.168.0.77:6379/0",
+    "task_req_queue": "task_req_queue",
+    "task_rsp_queue": "task_rsp_queue",
+    "task_stat_hset": "task_stat_hset",
+    "node_stat_hset": "node_stat_hset",
+    "task_list": [
         {
-            "task-content": {
+            "task_content": {
                 "the copy of task":"the copy of task"
             },
-            "task-state": {
+            "task_state": {
                 "state": "running|stopped|error",
-                "state-desc": "running|stopped|error desc",
-                "duration": 473492,
-                "work-cnt": 47349278
+                "state_desc": "running|stopped|error desc",
+                "start_ts": 1674986473492,
+                "uptime": 473492,
+                "work_cnt": 47349278
             }
         }
     ]

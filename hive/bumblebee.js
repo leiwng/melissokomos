@@ -29,54 +29,94 @@ class Bumblebee {
     // 根据任务参数初始化对象属性
     this.init(task)
 
-    // 部署任务
-    this.ssh
-      .on('ready', this.ssh_on_ready)
-      .on('error', this.ssh_on_error)
-      .on('end', this.ssh_on_end)
-      .on('close', this.ssh_on_close)
-      .on('keyboard-interactive', this.ssh_on_keyboard_interactive)
-      .connect({
-        host: this.ssh_host,
-        port: this.ssh_port,
-        username: this.ssh_user,
-        password: this.ssh_pass
-      });
+    if (this.health === false) {
+      return
+    }
 
+    // 部署任务
+    try {
+      this.ssh
+        .on('ready', this.ssh_on_ready)
+        .on('error', this.ssh_on_error)
+        .on('end', this.ssh_on_end)
+        .on('close', this.ssh_on_close)
+        .on('keyboard-interactive', this.ssh_on_keyboard_interactive)
+        .connect({
+          host: this.ssh_host,
+          port: this.ssh_port,
+          username: this.ssh_user,
+          password: this.ssh_pass
+        });
+    } catch (err) {
+      this.health = false
+      logger.error(
+        {
+          bee_id: this.id,
+          ssh_host: this.ssh_host,
+          ssh_port: this.ssh_port,
+          task: JSON.stringify(task),
+          error: JSON.stringify(err)
+        },
+        'Bumblebee, ssh connect failed'
+      );
+      return
+    }
   } // end of constructor
 
   init(task) {
     this.task = task
 
-    this.id = task.TASKID
-    this.action = task.ACTION //"start"
-    this.name = task.NAME
-    this.desc = task.DESC
+    this.id = task.id
+    this.action = task.action
+    this.name = task.name
+    this.desc = task.desc
 
     this.start_ts = Date.now()
     this.uptime = 0
+    this.health = true
 
-    this.ssh_host = task.INPUT.SSH_HOST
-    this.ssh_port = task.INPUT.SSH_PORT
-    this.ssh_user = task.INPUT.SSH_USER
-    this.ssh_pass = task.INPUT.SSH_PASS
-    this.ssh_cmd = task.INPUT.COMMAND_LINE
-    this.ssh_cmd_type = task.INPUT.COLLECTOR_TYPE //"LongScript"
-    this.ssh_encoding = task.INPUT.ENCODING
+    this.ssh_host = task.in.ssh_host
+    this.ssh_port = task.in.ssh_port
+    this.ssh_user = task.in.ssh_user
+    this.ssh_pass = task.in.ssh_pass
+    this.ssh_cmd = task.in.shell_cmd
+    this.ssh_encoding = task.in.encoding
 
-    this.output_type = task.OUTPUT.TYPE //现在只支持redis "REDIS"
-    this.output_method = task.OUTPUT.METHOD //现在只支持PUBLISH "PUSH"
-    this.pub = new Redis(task.OUTPUT.URL)
-    this.pub_channel = task.OUTPUT.CHANNEL
+    try {
+      this.pub = new Redis(task.out.redis_url)
+    } catch (err) {
+      this.health = false
+      logger.error(
+        {
+          bee_id: this.id,
+          redis_url: task.out.redis_url,
+          task: JSON.stringify(task),
+          error: JSON.stringify(err)
+        },
+        'Bumblebee, init redis failed'
+      );
+      return
+    }
+    this.pub_channel = task.out.redis_pub_ch
 
-    this.ssh = new Client();
+    try {
+      this.ssh = new Client();
+    } catch (err) {
+      this.health = false
+      logger.error(
+        {
+          bee_id: this.id,
+          redis_url: task.out.redis_url,
+          task: JSON.stringify(task),
+          error: JSON.stringify(err)
+        },
+        'Bumblebee, init ssh client failed'
+      );
+      return
+    }
 
-    // setup connection
-    // Promise.promisifyAll(this.ssh)
-
-    this.ssh_data_buffer = ''
-    this.ssh_status = 'connecting'
-
+    this.ssh_data_buffer = '';
+    this.ssh_status = 'connecting';
     this.line_counter = 0
 
     logger.info(
@@ -86,10 +126,7 @@ class Bumblebee {
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
         ssh_cmd: this.ssh_cmd,
-        ssh_cmd_type: this.ssh_cmd_type,
         ssh_encoding: this.ssh_encoding,
-        output_type: this.output_type,
-        output_method: this.output_method,
         pub_channel: this.pub_channel
       },
       'Bumblebee, init finished'
@@ -98,9 +135,7 @@ class Bumblebee {
   } // end of init
 
   ssh_on_ready() {
-
     this.ssh_status = 'ready'
-
     logger.info(
       {
         bee_id: this.id,
@@ -114,16 +149,15 @@ class Bumblebee {
       },
       'Bumblebee, SSH on ready'
     );
-
     // ssh 链路ready，可以开始采集工作
-    if (this.action == "Start") {
+    if (this.action == "start") {
       this.start()
     }
-
   }
 
   ssh_on_error(err) {
     this.ssh_status = 'error'
+    this.health = false
     console.log(err)
     logger.error(
       {
@@ -135,6 +169,7 @@ class Bumblebee {
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status,
+        task: JSON.stringify(task),
         error: JSON.stringify(err)
       },
       'Bumblebee, SSH on error'
@@ -179,6 +214,7 @@ class Bumblebee {
     logger.info(
       {
         bee_id: this.id,
+        task: JSON.stringify(task),
         keyboard_interactive_name: name,
         keyboard_interactive_instructions: instructions,
         keyboard_interactive_instructionsLang: instructionsLang,
@@ -194,31 +230,43 @@ class Bumblebee {
       {
         bee_id: this.id
       },
-      'Bumblebee, start'
+      'Bumblebee, starting...'
     );
 
     if (this.ssh_status != 'ready') {
+      this.health = false
       logger.error(
         {
-          bee_id: this.id
+          bee_id: this.id,
+          task: JSON.stringify(task),
         },
         'Bumblebee, SSH is not ready')
       return
     }
 
     this.ssh.exec(this.ssh_cmd, (err, stream) => {
-
-      if (err) throw err;
-
+      if (err) {
+        this.ssh_status = "exec_error";
+        this.health = false;
+        logger.error(
+          {
+            bee_id: this.id,
+            task: JSON.stringify(task),
+            error: JSON.stringify(err)
+          },
+          'Bumblebee, SSH failed'
+        );
+        throw err;
+      }
       stream
         .on('close', this.ssh_stream_on_close)
         .on('data', this.ssh_stream_on_data)
         .stderr.on('data', this.ssh_stream_stderr_on_data);
-
     });
   } // end of start
 
   ssh_stream_on_close(code, signal) {
+    this.ssh_status = 'stream_on_close'
     logger.info(
       {
         bee_id: this.id,
@@ -232,9 +280,7 @@ class Bumblebee {
   }
 
   ssh_stream_on_data(data) {
-
     this.ssh_status = 'on_data'
-
     if (data !== undefined) {
 
       //空行
@@ -304,6 +350,8 @@ class Bumblebee {
   }
 
   ssh_stream_stderr_on_data(data) {
+    this.ssh_status = 'on_stderr'
+    this.health = false
     logger.info(
       {
         bee_id: this.id,
@@ -311,7 +359,7 @@ class Bumblebee {
       },
       'Bumblebee, SSH Stream on stderr'
     )
-}
+  }
 
   stop() {
     logger.info(

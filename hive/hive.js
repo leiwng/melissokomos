@@ -14,7 +14,6 @@ require('dotenv').config()
 class Hive {
 
   constructor() {
-
     // member functions
     this.init = this.init.bind(this);
 
@@ -185,6 +184,8 @@ class Hive {
     if (this.node_tasks.length > 0) {
       // 创建bees
       this.bees = this.node_tasks.map((task) => new Bee(task));
+      // 只保留创建成功的bee.创建失败的,直接丢弃,对应的task也会被丢弃.
+      this.bees = this.bees.filter((bee) => bee.health === true);
       logger.info(
         {
           node_id: this.node_id,
@@ -198,6 +199,8 @@ class Hive {
       );
       // 启动采集
       this.bees.forEach((bee) => bee.start());
+      // 只保留启动成功的bee.启动失败的,直接丢弃,对应的task也会被丢弃.
+      this.bees = this.bees.filter((bee) => bee.health === true);
       logger.info(
         {
           node_id: this.node_id,
@@ -218,7 +221,6 @@ class Hive {
           node_stat_table_name: this.node_stat_table_name,
           func: "Hive->constructor",
           step: "准备根据node_stat中的node_tasks创建bees恢复采集，但node_tasks为空.",
-          bees_length: this.bees.length,
         },
         "节点初始化：没有遗留的task, bees=[]."
       );
@@ -302,21 +304,21 @@ class Hive {
               task_queue_name: this.task_queue_name,
               func: "Hive->chk_new_task",
               step: "监听任务队列成功.",
-              task_id: task.TASKID,
-              task_name: task.NAME
+              task_id: task.id,
+              task_name: task.name
             },
             "从任务队列中取出任务."
           );
 
-          if (task.ACTION == "TaskStop") {
+          if (task.action == "TaskStop") {
 
             // 停止任务
-            stop_bee(task.TASKID);
+            stop_bee(task.id);
 
             // 停止任务，更新node_stat
             this.update_node_stat();
 
-          } else if (task.ACTION == "Start") {
+          } else if (task.action == "Start") {
 
             // 生成新的bee，完成采集任务
             const bee = new Bee(task);
@@ -352,15 +354,15 @@ class Hive {
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
                 step: "任务类型错误.",
-                task_id: task.TASKID,
-                task_name: task.NAME
+                task_id: task.id,
+                task_name: task.name
               },
               "任务类型错误."
             );
 
             throw new Error("Task Type Err");
 
-          } // end of if (task.ACTION == "TaskStop")
+          } // end of if (task.action == "TaskStop")
         } // end of 取任务
       });
     }
@@ -388,10 +390,10 @@ class Hive {
     if (this.bees.length > 0) {
       this.node_stat.TASK_LIST = this.bees.map((bee) => {
         return {
-          ID: bee.task.TASKID,
+          ID: bee.task.id,
           TYPE: bee.task.TYPE,
-          NAME: bee.task.NAME,
-          DESC: bee.task.DESC,
+          NAME: bee.task.name,
+          DESC: bee.task.desc,
 
           INPUT: bee.task.INPUT,
           OUTPUT: bee.task.OUTPUT,

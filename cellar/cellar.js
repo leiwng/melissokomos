@@ -299,21 +299,21 @@ class Cellar {
               task_queue_name: this.task_queue_name,
               func: "Cellar->chk_new_task",
               step: "监听任务队列成功.",
-              task_id: task.TASKID,
-              task_name: task.NAME
+              task_id: task.id,
+              task_name: task.name
             },
             "从任务队列中取出任务."
           );
 
-          if (task.ACTION == "TaskStop") {
+          if (task.action == "TaskStop") {
 
             // 停止任务
-            stop_brewer(task.TASKID);
+            stop_brewer(task.id);
 
             // 停止任务，更新node_stat
             this.update_node_stat();
 
-          } else if (task.ACTION == "Start") {
+          } else if (task.action == "Start") {
 
             // 生成新的brewer，完成酿造任务
             const brewer = new Brewer(task);
@@ -349,15 +349,15 @@ class Cellar {
                 task_queue_name: this.task_queue_name,
                 func: "Cellar->chk_new_task",
                 step: "任务类型错误.",
-                task_id: task.TASKID,
-                task_name: task.NAME
+                task_id: task.id,
+                task_name: task.name
               },
               "任务类型错误."
             );
 
             throw new Error("Task Type Err");
 
-          } // end of if (task.ACTION == "TaskStop")
+          } // end of if (task.action == "TaskStop")
         } // end of 取任务
       });
     }
@@ -385,10 +385,10 @@ class Cellar {
     if (this.brewers.length > 0) {
       this.node_stat.TASK_LIST = this.brewers.map((brewer) => {
         return {
-          ID: brewer.task.TASKID,
+          ID: brewer.task.id,
           TYPE: brewer.task.TYPE,
-          NAME: brewer.task.NAME,
-          DESC: brewer.task.DESC,
+          NAME: brewer.task.name,
+          DESC: brewer.task.desc,
 
           INPUT: brewer.task.INPUT,
           OUTPUT: brewer.task.OUTPUT,

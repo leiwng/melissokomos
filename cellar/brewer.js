@@ -294,21 +294,21 @@ class Brewer {
               task_queue_name: this.task_queue_name,
               func: "Hive->chk_new_task",
               step: "监听任务队列成功.",
-              task_id: task.TASKID,
-              task_name: task.NAME
+              id: task.id,
+              task_name: task.name
             },
             "从任务队列中取出任务."
           );
 
-          if (task.ACTION == "TaskStop") {
+          if (task.action == "TaskStop") {
 
             // 停止任务
-            stop_recipe(task.TASKID);
+            stop_recipe(task.id);
 
             // 停止任务，更新node_stat
             this.update_node_stat();
 
-          } else if (task.ACTION == "Start") {
+          } else if (task.action == "Start") {
 
             // 生成新的recipe，完成酿造任务
             const recipe = new Recipe(task);
@@ -344,15 +344,15 @@ class Brewer {
                 task_queue_name: this.task_queue_name,
                 func: "Hive->chk_new_task",
                 step: "任务类型错误.",
-                task_id: task.TASKID,
-                task_name: task.NAME
+                id: task.id,
+                task_name: task.name
               },
               "任务类型错误."
             );
 
             throw new Error("Task Type Err");
 
-          } // end of if (task.ACTION == "TaskStop")
+          } // end of if (task.action == "TaskStop")
         } // end of 取任务
       });
     }
@@ -380,10 +380,10 @@ class Brewer {
     if (this.recipes.length > 0) {
       this.node_stat.TASK_LIST = this.recipes.map((recipe) => {
         return {
-          ID: recipe.task.TASKID,
+          ID: recipe.task.id,
           TYPE: recipe.task.TYPE,
-          NAME: recipe.task.NAME,
-          DESC: recipe.task.DESC,
+          NAME: recipe.task.name,
+          DESC: recipe.task.desc,
 
           INPUT: recipe.task.INPUT,
           OUTPUT: recipe.task.OUTPUT,
