@@ -1,16 +1,22 @@
 {
   "deepscan.enable": true,
   "cSpell.words": [
+    "blpop",
+    "brpop",
     "cuckoobee",
     "Cuckooo",
     "Cukoobee",
     "emerg",
     "filebeat",
+    "hdel",
+    "hget",
     "hset",
+    "lpush",
     "Masonbee",
     "mbank",
     "melissokomos",
     "pino",
+    "rpush",
     "singeds",
     "TASKID"
   ],

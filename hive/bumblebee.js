@@ -49,11 +49,13 @@ class Bumblebee {
         });
     } catch (err) {
       this.health = false
+      this.state = "error"
       logger.error(
         {
           bee_id: this.id,
           ssh_host: this.ssh_host,
           ssh_port: this.ssh_port,
+          ssh_user: this.ssh_user,
           task: JSON.stringify(task),
           error: JSON.stringify(err)
         },
@@ -74,6 +76,7 @@ class Bumblebee {
     this.start_ts = Date.now()
     this.uptime = 0
     this.health = true
+    this.state = "running"
 
     this.ssh_host = task.in.ssh_host
     this.ssh_port = task.in.ssh_port
@@ -86,6 +89,7 @@ class Bumblebee {
       this.pub = new Redis(task.out.redis_url)
     } catch (err) {
       this.health = false
+      this.state = "error"
       logger.error(
         {
           bee_id: this.id,
@@ -97,12 +101,13 @@ class Bumblebee {
       );
       return
     }
-    this.pub_channel = task.out.redis_pub_ch
+    this.redis_pub_ch = task.out.redis_pub_ch
 
     try {
       this.ssh = new Client();
     } catch (err) {
       this.health = false
+      this.state = "error"
       logger.error(
         {
           bee_id: this.id,
@@ -117,7 +122,7 @@ class Bumblebee {
 
     this.ssh_data_buffer = '';
     this.ssh_status = 'connecting';
-    this.line_counter = 0
+    this.line_count = 0
 
     logger.info(
       {
@@ -125,9 +130,9 @@ class Bumblebee {
         ssh_host: this.ssh_host,
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
-        ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
-        pub_channel: this.pub_channel
+        redis_url: this.redis_url,
+        redis_pub_ch: this.redis_pub_ch
       },
       'Bumblebee, init finished'
     );
@@ -142,7 +147,6 @@ class Bumblebee {
         ssh_host: this.ssh_host,
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
-        ssh_pass: this.ssh_pass,
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status
@@ -150,7 +154,7 @@ class Bumblebee {
       'Bumblebee, SSH on ready'
     );
     // ssh 链路ready，可以开始采集工作
-    if (this.action == "start") {
+    if (this.action === "start") {
       this.start()
     }
   }
@@ -158,6 +162,7 @@ class Bumblebee {
   ssh_on_error(err) {
     this.ssh_status = 'error'
     this.health = false
+    this.state = "error"
     console.log(err)
     logger.error(
       {
@@ -165,7 +170,6 @@ class Bumblebee {
         ssh_host: this.ssh_host,
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
-        ssh_pass: this.ssh_pass,
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status,
@@ -185,7 +189,6 @@ class Bumblebee {
         ssh_host: this.ssh_host,
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
-        ssh_pass: this.ssh_pass,
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status
@@ -201,7 +204,6 @@ class Bumblebee {
         ssh_host: this.ssh_host,
         ssh_port: this.ssh_port,
         ssh_user: this.ssh_user,
-        ssh_pass: this.ssh_pass,
         ssh_cmd: this.ssh_cmd,
         ssh_encoding: this.ssh_encoding,
         ssh_status: this.ssh_status
@@ -235,6 +237,7 @@ class Bumblebee {
 
     if (this.ssh_status != 'ready') {
       this.health = false
+      this.state = "error"
       logger.error(
         {
           bee_id: this.id,
@@ -248,6 +251,7 @@ class Bumblebee {
       if (err) {
         this.ssh_status = "exec_error";
         this.health = false;
+        this.state = "error";
         logger.error(
           {
             bee_id: this.id,
@@ -258,6 +262,7 @@ class Bumblebee {
         );
         throw err;
       }
+
       stream
         .on('close', this.ssh_stream_on_close)
         .on('data', this.ssh_stream_on_data)
@@ -284,9 +289,7 @@ class Bumblebee {
     if (data !== undefined) {
 
       //空行
-
       if (data.length === 1 && data[0] === 10) {
-
         //收到回车，把缓存的数据发送到redis
         if (this.ssh_data_buffer !== '') {
 
@@ -294,19 +297,17 @@ class Bumblebee {
           const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: this.ssh_data_buffer })
 
           // 按行PUB出去
-          this.pub.publish(this.pub_channel, data_line)
-          this.line_counter += 1
+          this.pub.publish(this.redis_pub_ch, data_line)
+          this.line_count += 1
           this.uptime = Date.now() - this.start_ts
 
           this.ssh_data_buffer = ''
           return
         }
-
         return
       }
 
       // 非空行
-
       // 判断收到的数据是否以回车符结束
       let end_with_LF = false
       if (data[data.length - 1] === 10) {
@@ -328,18 +329,17 @@ class Bumblebee {
         const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[i] })
 
         // 按行PUB出去
-        this.pub.publish(this.pub_channel, data_line)
-        this.line_counter += 1
+        this.pub.publish(this.redis_pub_ch, data_line)
+        this.line_count += 1
         this.uptime = Date.now() - this.start_ts
-
       }
       // 最后一行数据，如果以回车符结束，就清空缓存，否则缓存起来
       if (end_with_LF) {
         const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[lines.length - 1] })
 
         // 按行PUB出去
-        this.pub.publish(this.pub_channel, data_line)
-        this.line_counter += 1
+        this.pub.publish(this.redis_pub_ch, data_line)
+        this.line_count += 1
         this.uptime = Date.now() - this.start_ts
 
         this.ssh_data_buffer = ''
@@ -352,6 +352,7 @@ class Bumblebee {
   ssh_stream_stderr_on_data(data) {
     this.ssh_status = 'on_stderr'
     this.health = false
+    this.state = "error"
     logger.info(
       {
         bee_id: this.id,

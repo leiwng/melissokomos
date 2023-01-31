@@ -5,8 +5,6 @@
  * 2. 自动读取采集任务,并交由 Bee 执行
  * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
 ***/
-const { ssh } = require('ssh2');
-const Redis = require("ioredis");
 const logger = require("./bee_logger")
 const BumbleBee = require("./bumblebee")
 const CuckooBee = require("./cuckoobee")
@@ -16,19 +14,17 @@ const MasonBee = require("./masonbee")
 class Bee {
   constructor(task) {
 
-    if (task.TYPE == 'Agent') {
+    if (task.type == 'Agent') {
       return new MasonBee(task)
-    } else if (task.TYPE == 'Active') {
+    } else if (task.type == 'Active') {
       return new CuckooBee(task)
-    } else if (task.TYPE == 'Passive') {
+    } else if (task.type == 'Passive') {
       return new BumbleBee(task)
     } else {
-      logger.error(`Unknown task type: ${task.TYPE}`)
+      logger.error(`Unknown task type: ${task.type}`)
       throw new Error('Invalid task type: ')
     }
-
   } // end of constructor
-
 }; // end of class Bee
 
 module.exports = Bee

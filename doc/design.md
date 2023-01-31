@@ -161,6 +161,34 @@ sINGED_NODE_STATE_HSET
 }
 ```
 
+#### NODE-TASK-LIMIT-CHANGE TASK
+
+##### NODE-TASK-LIMIT-CHANGE TASK REQUEST
+
+```json
+{
+    "id": "id",
+    "name": "name",
+    "node_id": "node_id",
+    "scope": "node",
+    "type": "",
+    "action": "chg_task_limit",
+    "desc": "task_limit_change",
+    "task_limit": 10
+}
+```
+
+##### NODE-TASK-LIMIT-CHANGE TASK RESPONSE
+
+```json
+{
+    "the copy of the task content": "",
+    "result": "success|fail",
+    "result_desc": "success|fail reason|error desc"
+}
+```
+
+
 ### NODE STATE REPORT
 
 ```json
@@ -171,10 +199,9 @@ sINGED_NODE_STATE_HSET
     "uptime": 473492,
     "task_limit": 10,
     "task_count": 3,
-    "inner_redis_url": "redis://192.168.0.77:6379/0",
+    "redis_url": "redis://192.168.0.77:6379/0",
     "task_req_queue": "task_req_queue",
     "task_rsp_queue": "task_rsp_queue",
-    "task_stat_hset": "task_stat_hset",
     "node_stat_hset": "node_stat_hset",
     "task_list": [
         {
@@ -186,7 +213,7 @@ sINGED_NODE_STATE_HSET
                 "state_desc": "running|stopped|error desc",
                 "start_ts": 1674986473492,
                 "uptime": 473492,
-                "work_cnt": 47349278
+                "work_count": 47349278
             }
         }
     ]
