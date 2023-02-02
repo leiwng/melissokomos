@@ -1,16 +1,18 @@
 const Redis = require("ioredis")
 require("dotenv").config()
 
+const node_id = process.argv[2] || "hive-987654321"
+const task_id = process.argv[3] || "task-0"
+
 // Passive Collection Task
 let task = {
-    id: "task-limit-2",
-    name: "Chg Task Limit Task",
-    node_id: process.env.SINGED_NODE_ID,
-    scope: "node",
+    id: task_id,
+    name: `Stop Task ${task_id}`,
+    node_id: node_id,
+    scope: "task",
     type: "",
-    action: "chg_task_limit",
-    desc: "Chg Task Limit",
-    task_limit: 7
+    action: "stop",
+    desc: `Stop Task ${task_id}`,
 }
 
 const redis = new Redis(process.env.SINGED_REDIS_URL)

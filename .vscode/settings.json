@@ -11,7 +11,11 @@
     "hdel",
     "hget",
     "hset",
+    "LINDEX",
+    "linebreak",
+    "LLEN",
     "lpush",
+    "LRANGE",
     "Masonbee",
     "mbank",
     "melissokomos",
@@ -21,16 +25,16 @@
     "TASKID"
   ],
   "[javascript]": {
-    "editor.tabSize": 2
+    "editor.tabSize": 4
   },
   "[html]": {
-    "editor.tabSize": 2
+    "editor.tabSize": 4
   },
   "[json]": {
-    "editor.tabSize": 2
+    "editor.tabSize": 4
   },
   "[css]": {
-    "editor.tabSize": 2
+    "editor.tabSize": 4
   },
   "[python]": {
     "editor.tabSize": 4

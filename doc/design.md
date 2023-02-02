@@ -188,7 +188,6 @@ sINGED_NODE_STATE_HSET
 }
 ```
 
-
 ### NODE STATE REPORT
 
 ```json

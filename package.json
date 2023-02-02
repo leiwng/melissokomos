@@ -4,5 +4,8 @@
     "ioredis": "^5.2.3",
     "pino": "^8.6.1",
     "ssh2": "^1.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.33.0"
   }
 }
