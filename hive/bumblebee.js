@@ -1,7 +1,7 @@
 /***
  * Bumblebee 负责通过 ssh 通道从远程目标机上被动获取日志数据
  * Bumblebee 实现数据采集的自管理 self-management，包括：
- * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动停止接受新的采集任务
+ * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动 Stop 接受新的采集任务
  * 2. 自动读取采集任务,并交由 Bumblebee 执行
  * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
 ***/
@@ -11,7 +11,7 @@ const logger = require("./bumblebee_logger")
 
 
 class Bumblebee {
-    constructor(task) {
+    constructor(task, node_id, node_type) {
 
         // member function
         this.init = this.init.bind(this)
@@ -27,7 +27,7 @@ class Bumblebee {
         this.stop = this.stop.bind(this)
 
         // 根据任务参数初始化对象属性
-        this.init(task)
+        this.init(task, node_id, node_type)
 
         if (this.health === false) {
             return
@@ -52,6 +52,8 @@ class Bumblebee {
             logger.error(
                 {
                     bee_id: this.id,
+                    node_id: this.node_id,
+                    node_type: this.node_type,
                     ssh_host: this.ssh_host,
                     ssh_port: this.ssh_port,
                     ssh_user: this.ssh_user,
@@ -64,8 +66,10 @@ class Bumblebee {
         }
     } // end of constructor
 
-    init(task) {
+    init(task, node_id, node_type) {
         this.task = task
+        this.node_id = node_id
+        this.node_type = node_type
 
         this.id = task.id
         this.action = task.action
@@ -91,6 +95,8 @@ class Bumblebee {
             logger.error(
                 {
                     bee_id: this.id,
+                    node_id: this.node_id,
+                    node_type: this.node_type,
                     redis_url: task.out.redis_url,
                     task: JSON.stringify(task),
                     error: JSON.stringify(err)
@@ -108,6 +114,8 @@ class Bumblebee {
             logger.error(
                 {
                     bee_id: this.id,
+                    node_id: this.node_id,
+                    node_type: this.node_type,
                     redis_url: task.out.redis_url,
                     task: JSON.stringify(task),
                     error: JSON.stringify(err)
@@ -125,6 +133,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 ssh_host: this.ssh_host,
                 ssh_port: this.ssh_port,
                 ssh_user: this.ssh_user,
@@ -142,6 +152,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 ssh_host: this.ssh_host,
                 ssh_port: this.ssh_port,
                 ssh_user: this.ssh_user,
@@ -163,6 +175,8 @@ class Bumblebee {
         logger.error(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 ssh_host: this.ssh_host,
                 ssh_port: this.ssh_port,
                 ssh_user: this.ssh_user,
@@ -182,6 +196,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 ssh_host: this.ssh_host,
                 ssh_port: this.ssh_port,
                 ssh_user: this.ssh_user,
@@ -197,6 +213,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 ssh_host: this.ssh_host,
                 ssh_port: this.ssh_port,
                 ssh_user: this.ssh_user,
@@ -212,6 +230,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 task: JSON.stringify(this.task),
                 keyboard_interactive_name: name,
                 keyboard_interactive_instructions: instructions,
@@ -226,7 +246,9 @@ class Bumblebee {
     start() {
         logger.info(
             {
-                bee_id: this.id
+                bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
             },
             "Bumblebee, starting..."
         )
@@ -236,6 +258,8 @@ class Bumblebee {
             logger.error(
                 {
                     bee_id: this.id,
+                    node_id: this.node_id,
+                    node_type: this.node_type,
                     task: JSON.stringify(this.task),
                 },
                 "Bumblebee, SSH is not ready")
@@ -248,6 +272,8 @@ class Bumblebee {
                 logger.error(
                     {
                         bee_id: this.id,
+                        node_id: this.node_id,
+                        node_type: this.node_type,
                         task: JSON.stringify(this.task),
                         error: JSON.stringify(err)
                     },
@@ -268,6 +294,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 stream_on_close_code: code,
                 stream_on_close_signal: signal
             },
@@ -347,6 +375,8 @@ class Bumblebee {
         logger.info(
             {
                 bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
                 data: data
             },
             "Bumblebee, SSH Stream on stderr"
@@ -356,7 +386,9 @@ class Bumblebee {
     stop() {
         logger.info(
             {
-                bee_id: this.id
+                bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type
             },
             "Bumblebee, stopping..."
         )
@@ -373,7 +405,9 @@ class Bumblebee {
 
         logger.info(
             {
-                bee_id: this.id
+                bee_id: this.id,
+                node_id: this.node_id,
+                node_type: this.node_type,
             },
             "Bumblebee, stopped."
         )

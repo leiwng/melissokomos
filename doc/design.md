@@ -2,7 +2,7 @@
 
 ## Interface
 
-### TASK QUEUE
+### task-queue
 
 SINGED_TASK_REQ_Q
 SINGED_TASK_RSP_Q
@@ -44,6 +44,8 @@ sINGED_NODE_STATE_HSET
 ```json
 {
     "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
     "result": "success|fail",
     "result_desc": "success|fail reason|error desc"
 }
@@ -84,6 +86,8 @@ sINGED_NODE_STATE_HSET
 ```json
 {
     "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
     "result": "success|fail",
     "result_desc": "success|fail reason|error desc"
 }
@@ -122,6 +126,8 @@ sINGED_NODE_STATE_HSET
 ```json
 {
     "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
     "result": "success|fail",
     "result_desc": "success|fail reason|error desc"
 }
@@ -140,9 +146,10 @@ sINGED_NODE_STATE_HSET
     "type": "agent|active|passive|parser",
     "action": "start|stop|chg_task_limit",
     "desc": "task_desc",
+    "recipe": "./path/to/recipe/mbank6_app.js",
     "in": {
         "redis_url": "redis://192.168.0.77:6379/0",
-        "redis_sub-ch": "mbank6-customer-78.99.12.11",
+        "redis_sub_ch": "mbank6-customer-78.99.12.11",
     },
     "out": {
         "redis_url": "redis://192.168.0.77:6379/0",
@@ -156,6 +163,8 @@ sINGED_NODE_STATE_HSET
 ```json
 {
     "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
     "result": "success|fail",
     "result_desc": "success|fail reason|error desc"
 }
@@ -183,6 +192,8 @@ sINGED_NODE_STATE_HSET
 ```json
 {
     "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
     "result": "success|fail",
     "result_desc": "success|fail reason|error desc"
 }

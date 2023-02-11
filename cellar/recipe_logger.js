@@ -13,7 +13,7 @@ const levels = {
 
 module.exports = pinoLogger(
     {
-        name: "Cellar",
+        name: "Recipe",
         level: process.env.PINO_LOG_LEVEL || "info",
         customLevels: levels,
         useOnlyCustomLevels: true,

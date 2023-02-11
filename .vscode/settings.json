@@ -1,42 +1,53 @@
 {
-  "deepscan.enable": true,
-  "cSpell.words": [
-    "blpop",
-    "brpop",
-    "cuckoobee",
-    "Cuckooo",
-    "Cukoobee",
-    "emerg",
-    "filebeat",
-    "hdel",
-    "hget",
-    "hset",
-    "LINDEX",
-    "linebreak",
-    "LLEN",
-    "lpush",
-    "LRANGE",
-    "Masonbee",
-    "mbank",
-    "melissokomos",
-    "pino",
-    "rpush",
-    "singeds",
-    "TASKID"
-  ],
-  "[javascript]": {
-    "editor.tabSize": 4
-  },
-  "[html]": {
-    "editor.tabSize": 4
-  },
-  "[json]": {
-    "editor.tabSize": 4
-  },
-  "[css]": {
-    "editor.tabSize": 4
-  },
-  "[python]": {
-    "editor.tabSize": 4
-  }
+    "deepscan.enable": true,
+    "cSpell.words": [
+        "blpop",
+        "brpop",
+        "childs",
+        "cuckoobee",
+        "Cuckooo",
+        "Cukoobee",
+        "cust",
+        "efel",
+        "emerg",
+        "Eqmt",
+        "filebeat",
+        "hdel",
+        "hget",
+        "hset",
+        "inte",
+        "LINDEX",
+        "linebreak",
+        "LLEN",
+        "lpop",
+        "lpush",
+        "LRANGE",
+        "LZYH",
+        "Masonbee",
+        "mbank",
+        "melissokomos",
+        "ndjson",
+        "pino",
+        "rpush",
+        "Shou",
+        "singeds",
+        "TASKID",
+        "trusfort",
+        "yitong"
+    ],
+    "[javascript]": {
+        "editor.tabSize": 4
+    },
+    "[html]": {
+        "editor.tabSize": 4
+    },
+    "[json]": {
+        "editor.tabSize": 4
+    },
+    "[css]": {
+        "editor.tabSize": 4
+    },
+    "[python]": {
+        "editor.tabSize": 4
+    }
 }

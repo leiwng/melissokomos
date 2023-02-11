@@ -5,16 +5,16 @@
 - 10-23
   - 修改最大任务数消息体
     - 定义接收和返回消息体
-    - 节点首次启动可以从环境变量读取到默认最大任务数
+    - node 首次Start 可以从环境变量读取到默认最大任务数
     - 接收到命令后，修改最大任务数
 - 10-21
-  - 停止任务消息体
-    - 取消worknode字段，节点接到广播只需要判断自身有无任务即可
-    - TYPE：Active，Passive，Agent，没有parser类型。因为一条任务子任务是采集+解析成对出现，所以只需要发一条广播，采集节点需要判断是Active，Passive，Agent哪一种再执行，解析节点接到广播，无需判断类型就可执行
+  -  Stop 任务消息体
+    - 取消worknode字段，node 接到广播只需要判断自身有无任务即可
+    - TYPE：Active，Passive，Agent，没有parsertype 。因为一条任务子任务是采集+解析成对出现，所以只需要发一条广播，采集node 需要判断是Active，Passive，Agent哪一种再执行，解析node 接到广播，无需判断type 就可执行
 
 - 10-15
-  - 消息体新增ACTION字段，启动任务Start，停止任务Stop
-  - 新增停止任务消息体,worknode字段预留，后续提供
+  - 消息体新增ACTION字段，Start 任务Start， Stop 任务Stop
+  - 新增 Stop 任务消息体,worknode字段预留，后续提供
 ***/
 /***
 1. 任务接口
@@ -71,7 +71,7 @@ AgentTaskReturnSample = {
   "RESULT": "Success",
   "DESC": ""
 }
-// - 说明：后台并不关心是什么采集类型，我只需要区分是采集或者解析
+// - 说明：后台并不关心是什么采集type ，我只需要区分是采集或者解析
 
 /***
 1.1.2 新建Active主动采集任务
@@ -107,7 +107,7 @@ ActiveTaskSample = {
 }
 /***
 - 说明
-  - COLLECTOR_TYPE：任务类型
+  - COLLECTOR_TYPE：任务type
     - Time：每天按时间执行
     - Interval：间隔时间执行
     - OneShot：一次性
@@ -158,7 +158,7 @@ PassiveTaskSample = {
 }
 /***
 - 说明
-  - COLLECTOR_TYPE：任务类型
+  - COLLECTOR_TYPE：任务type
     - FileTail
     - LongScript
 ***/
@@ -207,7 +207,7 @@ ParserTaskSample = {
 
 
 /***
-1.2. 停止任务
+1.2.  Stop 任务
 1.2.1 任务接收
 - 接收命令频道名（NODE方接收）：SINGED_TASK_CHG_REQ_CH
 ***/
@@ -221,8 +221,8 @@ StopTaskSample = {
 /***
   说明:
     - 一条任务子任务是采集+解析成对出现，所以只需要发一条广播
-    - 采集节点需要判断是Active，Passive，Agent哪一种再执行
-    - 解析节点接到广播，无需判断类型即可执行
+    - 采集node 需要判断是Active，Passive，Agent哪一种再执行
+    - 解析node 接到广播，无需判断type 即可执行
 ***/
 /***
 1.2.2 执行返回
@@ -238,9 +238,9 @@ StopTaskReturnSample = {
 }
 
 /***
-2. 节点接口
+2. node 接口
 
-2.1 节点启动上报
+2.1 node Start 上报
   - 返回结果 队列名（NODE方发送）：SINGED_NODE_RETURN_QUEUE
 ***/
 nodeStartSample = {
@@ -251,7 +251,7 @@ nodeStartSample = {
 }
 
 /***
-2.2 改变节点最大任务数
+2.2 改变node 最大任务数
 2.2.1 接收
   - 接收命令频道名（NODE方接收）：SINGED_NODE_CHG_REQ
 ***/
