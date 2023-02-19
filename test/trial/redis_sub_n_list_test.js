@@ -52,7 +52,7 @@ redis.exists(node_stat_table_name).then(res => {
 //         if (err) {
 //             logger.error(
 //                 {
-//                     stage: "检查任务",
+//                     stage: "检查 Task",
 //                     node_id: node_id,
 //                     task_queue_name: task_queue_name,
 //                     err: err
@@ -60,16 +60,16 @@ redis.exists(node_stat_table_name).then(res => {
 //                 "listen to task-queue fail (task_queue_name)."
 //             )
 //         } else {
-//             // 从任务队列中取出任务
+//             // 从 Task队列中get 出 Task
 //             const task = JSON.parse(res[1])
 //             logger.info(
 //                 {
-//                     stage: "检查任务",
+//                     stage: "检查 Task",
 //                     node_id: node_id,
 //                     task_queue_name: task_queue_name,
 //                     task: task
 //                 },
-//                 "从任务队列中取出任务."
+//                 "从 Task队列中get 出 Task."
 //             )
 //         }
 //     })
@@ -82,7 +82,7 @@ redis_sub.subscribe("task_chg_req_channel_name", (err, count) => {
     if (err) {
         logger.error(
             {
-                stage: "订阅任务变更请求",
+                stage: "订阅 Task变更请求",
                 task_chg_req_channel_name: task_chg_req_channel_name,
                 err: err
             },
@@ -91,7 +91,7 @@ redis_sub.subscribe("task_chg_req_channel_name", (err, count) => {
     } else {
         logger.info(
             {
-                stage: "订阅任务变更请求",
+                stage: "订阅 Task变更请求",
                 task_chg_req_channel_name: task_chg_req_channel_name,
                 count: count
             },
@@ -103,7 +103,7 @@ redis_sub.subscribe("task_chg_req_channel_name", (err, count) => {
 redis_sub.on("message", (channel, message) => {
     logger.info(
         {
-            stage: "任务变更请求到达",
+            stage: " Task变更请求到达",
             channel: channel,
             message: message
         },
@@ -118,7 +118,7 @@ redis_sub.on("message", (channel, message) => {
         if (err) {
             logger.error(
                 {
-                    stage: "发布任务变更响应",
+                    stage: "发布 Task变更响应",
                     task_chg_rsp_channel_name: task_chg_rsp_channel_name,
                     err: err
                 },
@@ -127,7 +127,7 @@ redis_sub.on("message", (channel, message) => {
         } else {
             logger.info(
                 {
-                    stage: "发布任务变更响应",
+                    stage: "发布 Task变更响应",
                     task_chg_rsp_channel_name: task_chg_rsp_channel_name,
                     count: count
                 },

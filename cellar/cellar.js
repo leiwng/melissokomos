@@ -1,11 +1,11 @@
 /***
- * Cellar 酿房，Brewer酿造蜂蜜的地方。 Brewer根据recipe酿造蜂蜜。
- * Recipe是酿造秘方的抽象，每一种密有单独的酿方。
+ * Cellar 酿房, Brewer酿造蜂蜜的地方。 Brewer根据recipe酿造蜂蜜。
+ * Recipe是酿造秘方的抽象, 每一种密有单独的酿方。
 ***/
 
 const Redis = require("ioredis")
-const Brewer = require("./brewer_old")
-const logger = require("./cellar_logger")
+const Brewer = require("./brewer")
+const logger = require("./cellar_logger")(require("path").basename(__filename))
 require("dotenv").config()
 
 
@@ -35,24 +35,24 @@ class Cellar {
     }
 
     init() {
-        // node type , hive or cellar
+        // node type , Cellar or cellar
         this.node_type = "cellar"
-        // 从env中获取运行的基础设施和基本标识信息
+        // 从env中获get 运行的基础设施和基本标识信息
         this.node_id = process.env.SINGED_NODE_ID
-        // 任务数上限，超过此数值，不再接受新任务
+        //  Task数上限, 超过此数值, 不再接受New  Task
         this.task_limit = process.env.SINGED_TASK_LIMIT
         // Redis服务访问点
         this.redis_url = process.env.SINGED_REDIS_URL
 
-        // 任务下达队列
+        //  Task下达队列
         this.task_req_queue = process.env.SINGED_TASK_REQ_QUEUE
-        // 任务返回队列
+        //  Task返回队列
         this.task_rsp_queue = process.env.SINGED_TASK_RSP_QUEUE
 
-        // node 状态任务 Update 表
+        // node 状态 Task Update 表
         this.node_stat_hset = process.env.SINGED_NODE_STAT_HSET
 
-        // 检查新任务的时间间隔(毫秒)
+        // 检查New  Task的时间间隔(毫秒)
         this.chk_new_task_interval_ms = process.env.SINGED_CHK_NEW_TASK_INTERVAL_MS
         //  Update node 状态的时间间隔(毫秒)
         this.node_stat_update_interval_ms = process.env.SINGED_NODE_STAT_UPDATE_INTERVAL_MS
@@ -60,6 +60,7 @@ class Cellar {
         this.node_stat = {}
         this.node_tasks = []
         this.brewers = []
+        this.task_count = 0
 
         this.chk_task_interval = null
         this.update_node_stat_interval = null
@@ -86,6 +87,35 @@ class Cellar {
             )
             process.exit(1)
         }
+
+        // Handle Ctrl+C
+        process.on("SIGINT", () => {
+            logger.info(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Cellar On Ctrl+C",
+                    step: "Exiting...",
+                },
+                "Exit..."
+            )
+
+            this.stop()
+
+            logger.info(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Cellar Stopped",
+                    step: "Cellar-Stop",
+                },
+                "Cellar Exit."
+            )
+
+            process.exit(0)
+
+        })
+
     } // end of init
 
     get_node_stat() {
@@ -100,7 +130,7 @@ class Cellar {
                                 node_type: this.node_type,
                                 node_stat_hset: this.node_stat_hset,
                                 func: "Cellar -> get_node_stat",
-                                step: "find node info in node_stat_hset",
+                                step: "Get Node State From Node-ID ERRORed",
                                 err: err,
                             },
                             `cannot find node with id: ${this.node_id} in node_stat_hset.`
@@ -116,7 +146,7 @@ class Cellar {
                                 node_type: this.node_type,
                                 node_stat_hset: this.node_stat_hset,
                                 func: "Cellar -> get_node_stat",
-                                step: "find node info in node_stat_hset",
+                                step: "Get Node State From Node-ID SUCCESS",
                                 node_stat: this.node_stat,
                             },
                             `found node with id: ${this.node_id} in node_stat_hset.`
@@ -131,7 +161,7 @@ class Cellar {
                         node_type: this.node_type,
                         node_stat_hset: this.node_stat_hset,
                         func: "Cellar -> get_node_stat",
-                        step: "check whether node_stat_hset exist.",
+                        step: "Check node_stat_hset existence.",
                         node_stat: this.node_stat,
                     },
                     `cannot find node state table: ${this.node_id}.`
@@ -151,7 +181,7 @@ class Cellar {
                     node_id: this.node_id,
                     node_type: this.node_type,
                     func: "Cellar -> get_tasks_from_node_stat",
-                    step: "从node_stat中读取node_tasks",
+                    step: "From node_stat get node_tasks",
                     node_tasks: this.node_tasks,
                 },
                 "Get node tasks from node_stat successfully."
@@ -163,7 +193,7 @@ class Cellar {
                     node_id: this.node_id,
                     node_type: this.node_type,
                     func: "Cellar -> get_tasks_from_node_stat",
-                    step: "从node_stat中读取node_tasks",
+                    step: "From node_stat get node_tasks",
                     node_tasks: this.node_tasks,
                 },
                 "node_stat is NULL."
@@ -180,7 +210,7 @@ class Cellar {
             this.brewers = this.brewers.filter((brewer) => brewer.health === true)
             // start brewers
             this.brewers.forEach((brewer) => brewer.start())
-            // 只保留SuccessStart 的brewer.fail 的,直接丢弃,对应的task也会被丢弃.
+            // 只保留Success Start 的brewer.fail 的,直接丢弃,对应的task也会被丢弃.
             this.brewers = this.brewers.filter((brewer) => brewer.health === true)
             logger.info(
                 {
@@ -192,9 +222,6 @@ class Cellar {
                 },
                 "Generate brewers for resuming tasks in node."
             )
-            // brewer在ssh_on_ready后会自动Start 酿造,不需要调用start()
-            // this.brewers.forEach((brewer) => brewer.start());
-            // 只保留Start Success的brewer.Start fail 的,直接丢弃,对应的task也会被丢弃.
         } else {
             // node_stat have no task, no need resume harvest.
             this.brewers = []
@@ -205,13 +232,13 @@ class Cellar {
                     func: "Cellar->resume_tasks",
                     step: "brewers=[]",
                 },
-                "没有遗留的task, brewers=[]."
+                " No Left task, brewers=[]."
             )
         }
     } // end of resume_tasks
 
     start() {
-    // 听task-queue接受新任务
+    // 听task-queue接受New  Task
         this.chk_task_interval = setInterval(
             this.chk_new_task,
             this.chk_new_task_interval_ms
@@ -222,10 +249,10 @@ class Cellar {
                 node_type: this.node_type,
                 task_req_queue: this.task_req_queue,
                 func: "Cellar->start",
-                step: "Start chk_new_task定时器",
+                step: "Start chk_new_task_interval Func",
                 chk_task_interval: `${this.chk_task_interval}`,
             },
-            "开始任务监听."
+            "Start New Task Listening."
         )
 
         // 设置定时 Update node_stat_table
@@ -242,13 +269,13 @@ class Cellar {
                 step: "Set update_node_stat_interval",
                 update_node_stat_interval: `${this.update_node_stat_interval}`,
             },
-            "开始定时 Update node 状态."
+            "Start Node State Update Routinely."
         )
     } // end of start
 
     chk_new_task() {
     // listen to task-queue
-        this.redis.blpop(this.task_req_queue, 0, (err, res) => {
+        this.redis.lpop(this.task_req_queue, (err, res) => {
             if (err) {
                 logger.error(
                     {
@@ -264,11 +291,15 @@ class Cellar {
                 throw err
             } else {
 
-                // 从任务队列中取出任务
-                let task = JSON.parse(res[1])
+                // 从 Task队列中get 出 Task
+                if (res === null) {
+                    return
+                }
+
+                let task = JSON.parse(res)
 
                 if (task.type !== "parser") {
-                    // 退回任务队列
+                    // Send Back to Task Queue
                     this.redis.rpush(this.task_req_queue, JSON.stringify(task))
                     logger.info(
                         {
@@ -280,9 +311,9 @@ class Cellar {
                             task_name: task.name,
                             task_desc: task.desc,
                             func: "Cellar->chk_new_task",
-                            step: "非Parser任务",
+                            step: "NOT Parser Task",
                         },
-                        "非Parser任务,退回任务队列."
+                        "NOT Parser Task, Send Back to Task Queue."
                     )
                     return
                 }
@@ -290,11 +321,11 @@ class Cellar {
                 if (task.node_id === this.node_id
                     && task.scope === "task"
                     && task.action === "stop") {
-                    //  Stop 任务
-                    this.stop_brew(task.id)
+                    //  Stop  Task
+                    this.stop_brew(task.task_id_for_stop)
                     // task exec response
                     this.update_task_result(task, "success", `success stop task:${task.id}.`)
-                    //  Stop 任务， Update node_stat
+                    //  Stop  Task,  Update node_stat
                     this.update_node_stat()
                     logger.info(
                         {
@@ -303,12 +334,13 @@ class Cellar {
                             task_id: task.id,
                             task_type: task.type,
                             task_action: task.action,
+                            task_id_for_stop: task.task_id_for_stop,
                             task_name: task.name,
                             task_desc: task.desc,
                             func: "Cellar->chk_new_task",
-                            step: "Task Stop任务",
+                            step: "Task-Stop Task",
                         },
-                        "Task Stop任务,处理完毕."
+                        "Task-Stop Task,Completed."
                     )
                     return
                 }
@@ -316,7 +348,7 @@ class Cellar {
                 if (task.node_id === this.node_id
                     && task.scope === "node"
                     && task.action === "chg_task_limit") {
-                    // 修改任务限制
+                    // 修改 Task限制
                     this.task_limit = task.task_limit
                     this.update_task_result(task, "success", `success change task_limit to ${task.task_limit} on node: ${this.node_id}.`)
                     this.update_node_stat()
@@ -330,16 +362,16 @@ class Cellar {
                             task_name: task.name,
                             task_desc: task.desc,
                             func: "Cellar->chk_new_task",
-                            step: "chg_task_limit任务",
+                            step: "chg_task_limit Task",
                         },
-                        "chg_task_limit任务,处理完毕."
+                        "chg_task_limit Task,Completed."
                     )
                     return
                 }
 
                 if (task.action === "start") {
                     if (this.brewers.length >= this.task_limit) {
-                        // 任务数已经达到限制，退回任务队列
+                        // Over Node Task Limit, Send Back to Task Queue
                         this.redis.rpush(this.task_req_queue, JSON.stringify(task))
                         logger.info(
                             {
@@ -351,16 +383,16 @@ class Cellar {
                                 task_name: task.name,
                                 task_desc: task.desc,
                                 func: "Cellar->chk_new_task",
-                                step: "任务数已经达到限制，退回任务队列."
+                                step: "Over Node Task Limit, Send Back to Task Queue."
                             },
-                            "任务数已经达到限制，退回任务队列."
+                            "Over Node Task Limit, Send Back to Task Queue."
                         )
                         return
                     }
 
-                    // 生成新的brewer， finish 酿造任务
+                    // 生成New 的brewer,  finish 酿造 Task
                     const brewer = new Brewer(task, this.node_id, this.node_type)
-                    brewer.start
+                    brewer.start()
                     if (brewer.health) {
                         this.brewers.push(brewer)
                         logger.info(
@@ -375,12 +407,12 @@ class Cellar {
                                 func: "Cellar->chk_new_task",
                                 step: "Start Brewer."
                             },
-                            "SuccessStart Brewer."
+                            "Success Start Brewer."
                         )
                     }
                     // task exec response
                     this.update_task_result(task, "success", `success start task:${task.id}.`)
-                    // 增加新Task，Start 新的brewer， Update node_stat
+                    // 增加New Task, Start New 的brewer,  Update node_stat
                     this.update_node_stat()
                     logger.info(
                         {
@@ -394,9 +426,9 @@ class Cellar {
                             brewer_id: brewer.id,
                             brewer_name: brewer.name,
                             func: "Cellar->chk_new_task",
-                            step: "Start brewerSuccess.",
+                            step: "Start brewer Success.",
                         },
-                        "Start 新brewer."
+                        "Start New brewer."
                     )
                     return
                 } // end of if (task.action === "start")
@@ -413,12 +445,12 @@ class Cellar {
                         task_name: task.name,
                         task_desc: task.desc,
                         func: "Cellar->chk_new_task",
-                        step: "取到超出处理能力的任务",
+                        step: "get Over-Duty Task",
                     },
-                    "取到超出处理能力的任务，退回任务队列."
+                    "get Over-Duty Task, Send Back to Task Queue."
                 )
                 return
-            } // end of 取任务
+            } // end of get  Task
         })
     } // end of chk_new_task
 
@@ -428,6 +460,10 @@ class Cellar {
         this.brewers = this.brewers.filter((brewer) => brewer.health === true)
 
         //  Update node_stat中的node信息
+        if (this.node_stat === undefined || this.node_stat === null) {
+            this.node_stat = {}
+        }
+
         this.node_stat.id = this.node_id
         this.node_stat.type = this.node_type
         this.node_stat.start_ts = this.start_ts
@@ -479,18 +515,18 @@ class Cellar {
                         " Update node_stat."
                     )
                 } else {
-                    logger.info(
-                        {
-                            node_id: this.node_id,
-                            node_type: this.node_type,
-                            node_stat_hset: this.node_stat_hset,
-                            node_state: JSON.stringify(this.node_stat),
-                            func: "Cellar->update_node_stat",
-                            step: " Update node_statSuccess.",
-                            hset_response: res
-                        },
-                        " Update node_statSuccess."
-                    )
+                    // logger.info(
+                    //     {
+                    //         node_id: this.node_id,
+                    //         node_type: this.node_type,
+                    //         node_stat_hset: this.node_stat_hset,
+                    //         node_state: JSON.stringify(this.node_stat),
+                    //         func: "Cellar->update_node_stat",
+                    //         step: " Update Node State Success.",
+                    //         hset_response: res
+                    //     },
+                    //     " Update Node State Success."
+                    // )
                 }
             }
         )
@@ -513,18 +549,29 @@ class Cellar {
                 " Stop brewer success."
             )
 
-            // 从brewers中删除brewer
+            // 从brewers中Delete brewer
             this.brewers = this.brewers.filter((brewer) => brewer.id !== brewer_id)
             logger.info(
                 {
                     node_id: this.node_id,
                     node_type: this.node_type,
                     func: "Cellar->stop_brew",
-                    step: "del brewer from hive.",
+                    step: "del brewer from Cellar.",
                     brewer_id: brewer_id,
-                    removed_brewer_name: brewer_need_stop.name,
+                    stopped_brewer_name: brewer_need_stop.name,
                 },
-                "Stop brew and del brewer from hive."
+                "Stop brew and del brewer from Cellar."
+            )
+        } else {
+            logger.error(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Cellar->stop_brew",
+                    step: " Stop brewer Fail.",
+                    brewer_id: brewer_id
+                },
+                "Can not find the brewer to stop:"
             )
         }
     } // end of stop_brew
@@ -550,22 +597,22 @@ class Cellar {
                 node_id: this.node_id,
                 node_type: this.node_type,
                 func: "Cellar->stop",
-                step: "Hive Stop  all brewers",
+                step: "Cellar Stop  all brewers",
                 brewers_length: this.brewers.length
             },
             " Stop  all Brewers."
         )
 
-        // 删除node_stat
+        // Delete node_stat
         this.redis.hdel(this.node_stat_hset, this.node_id)
         logger.info(
             {
                 node_id: this.node_id,
                 node_stat_hset: this.node_stat_hset,
                 func: "Cellar->stop",
-                step: "删除node_stat_hset"
+                step: "Delete node_stat_hset"
             },
-            "删除node_stat_hset finish ."
+            "Delete node_stat_hset finish ."
         )
 
         clearInterval(this.update_node_stat_interval)
@@ -580,7 +627,7 @@ class Cellar {
         )
 
 
-        this.redis.disconnect()
+        this.redis.quit()
         logger.info(
             {
                 node_id: this.node_id,

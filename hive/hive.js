@@ -1,12 +1,12 @@
 /***
- * Hive 蜂房，驱赶Bee去采集花粉。Bee根据不同的种类对应不同的采集方式。
- * Bumblebee 轰炸蜂，被动采集，通过 ssh 通道从远程目标机上tail日志文件获get 花粉。
- * Cuckoobee 喜鹊蜂，主动采集，通过 ssh 通道从远程目标机上执行 shell script 获get 花粉。
- * Masonbee 砖工蜂，代理采集，通过直接从第三方获get 花粉。
+ * Hive 蜂房, 驱赶Bee去采集花粉。Bee根据不同的种类对应不同的采集方式。
+ * Bumblebee 轰炸蜂, 被动采集, 通过 ssh 通道从远程目标机上tail日志文件获get 花粉。
+ * Cuckoobee 喜鹊蜂, 主动采集, 通过 ssh 通道从远程目标机上执行 shell script 获get 花粉。
+ * Masonbee 砖工蜂, 代理采集, 通过直接从第三方获get 花粉。
 ***/
 const Redis = require("ioredis")
 const Bee = require("./bee")
-const logger = require("./hive_logger")
+const logger = require("./hive_logger")(require("path").basename(__filename))
 require("dotenv").config()
 
 
@@ -28,7 +28,7 @@ class Hive {
         this.get_tasks_from_node_stat = this.get_tasks_from_node_stat.bind(this)
 
         this.log_info = this.log_info.bind(this)
-        this.log_error = this.log_error.bind(this)
+        this.log_err = this.log_err.bind(this)
 
         // constructor operations
         this.init()
@@ -43,20 +43,20 @@ class Hive {
         this.node_type = "hive"
         // 从env中获get 运行的基础设施和基本标识信息
         this.node_id = process.env.SINGED_NODE_ID
-        // 任务数上限，超过此数值，不再接受新任务
+        //  Task数上限, 超过此数值, 不再接受New  Task
         this.task_limit = process.env.SINGED_TASK_LIMIT
         // Redis服务访问点
         this.redis_url = process.env.SINGED_REDIS_URL
 
-        // 任务下达队列
+        //  Task下达队列
         this.task_req_queue = process.env.SINGED_TASK_REQ_QUEUE
-        // 任务返回队列
+        //  Task返回队列
         this.task_rsp_queue = process.env.SINGED_TASK_RSP_QUEUE
 
-        // node 状态任务 Update 表
+        // node 状态 Task Update 表
         this.node_stat_hset = process.env.SINGED_NODE_STAT_HSET
 
-        // 检查新任务的时间间隔(毫秒)
+        // 检查New  Task的时间间隔(毫秒)
         this.chk_new_task_interval_ms = process.env.SINGED_CHK_NEW_TASK_INTERVAL_MS
         //  Update node 状态的时间间隔(毫秒)
         this.node_stat_update_interval_ms = process.env.SINGED_NODE_STAT_UPDATE_INTERVAL_MS
@@ -64,6 +64,7 @@ class Hive {
         this.node_stat = {}
         this.node_tasks = []
         this.bees = []
+        this.task_count = 0
 
         this.chk_task_interval = null
         this.update_node_stat_interval = null
@@ -80,6 +81,15 @@ class Hive {
             this.log_err("Hive init", "New Redis Client", this.redis_url, err, "Redis connection error! node exit! ")
             process.exit(1)
         }
+
+        // Handle Ctrl+C
+        process.on("SIGINT", () => {
+            this.log_info("Hive on Ctrl+C", "Handler", "On Exiting", "Exiting...")
+            this.stop()
+            this.log_info("Hive Stopped", "Handler", "Hive Stopped", "Exit")
+            process.exit(0)
+        })
+
     } // end of init
 
     get_node_stat() {
@@ -109,10 +119,10 @@ class Hive {
         if (Object.keys(this.node_stat).length !== 0) {
             // get node tasks from node statues table
             this.node_tasks = this.node_stat.task_list.map((item) => { return item.task_content })
-            this.log_info("get_tasks_from_node_stat", "从node_stat中读get node_tasks", this.node_tasks, "Get node tasks from node_stat successfully.")
+            this.log_info("get_tasks_from_node_stat", "From node_stat get node_tasks", this.node_tasks, "Get node tasks from node_stat successfully.")
         } else {
             this.node_tasks = []
-            this.log_info("get_tasks_from_node_stat", "从node_stat中读get node_tasks", this.node_tasks, "node_stat is NULL.")
+            this.log_info("get_tasks_from_node_stat", "From node_stat get node_tasks", this.node_tasks, "node_stat is NULL.")
         }
     } // end of get_tasks_from_node_stat
 
@@ -123,6 +133,9 @@ class Hive {
             this.bees = this.node_tasks.map((task) => new Bee(task, this.node_id, this.node_type))
             // 只保留创建Success的bee.创建fail 的,直接丢弃,对应的task也会被丢弃.
             this.bees = this.bees.filter((bee) => bee.health === true)
+
+            this.task_count = this.bees.length
+
             this.log_info("resume_tasks", "Generate Bees from tasks in node_stat", `Bee Number: ${this.bees.length}`, "Generate Bees for resuming tasks in node successfully.")
             // Bee在ssh_on_ready后会自动Start 采集,不需要调用start()
             // this.bees.forEach((bee) => bee.start());
@@ -130,94 +143,111 @@ class Hive {
         } else {
             // node_stat have no task, no need resume harvest.
             this.bees = []
-            this.log_info("resume_tasks", "bees=[]", "bees=[]", "没有遗留的task.")
+
+            this.task_count = this.bees.length
+
+            this.log_info("resume_tasks", "bees=[]", "bees=[]", " No Left task.")
         }
     } // end of resume_tasks
 
     start() {
-    // 听task-queue接受新任务
+    // 听task-queue接受New  Task
         this.chk_task_interval = setInterval(
             this.chk_new_task,
             this.chk_new_task_interval_ms
         )
-        this.log_info("start", "Start chk_new_task定时器", `chk_new_task_interval: ${this.chk_task_interval}`, "开始任务监听.")
+        this.log_info("start", "Start chk_new_task_interval Func", `chk_new_task_interval: ${this.chk_task_interval}`, "Start New Task Listening.")
 
         // 设置定时 Update node_stat_table
         this.update_node_stat_interval = setInterval(
             this.update_node_stat,
             this.node_stat_update_interval_ms
         )
-        this.log_info("start", "Start update_node_stat定时器", `update_node_stat_interval: ${this.update_node_stat_interval}`, "开始定时 Update node 状态.")
+        this.log_info("start", "Start update_node_stat_interval", `update_node_stat_interval: ${this.update_node_stat_interval}`, "Start Node State Update Routinely.")
     } // end of start
 
     chk_new_task() {
     // listen to task-queue
-        this.redis.blpop(this.task_req_queue, 0, (err, res) => {
+        this.redis.lpop(this.task_req_queue, (err, res) => {
             if (err) {
                 this.log_err("chk_new_task", "listen to task-queue", `Task REQ Queue:${ this.task_req_queue }`, err, "listen to task-queue fail .")
                 throw err
             } else {
+                if (res === null) {
+                    return
+                }
 
-                // 从任务队列中get 出任务
-                let task = JSON.parse(res[1])
+                // 从 Task队列中get 出 Task
+                let task = JSON.parse(res)
+
                 if (task.type === "parser") {
-                    // 退回任务队列
+                    // Send Back to Task Queue
                     this.redis.rpush(this.task_req_queue, JSON.stringify(task))
-                    this.log_info("chk_new_task", "Parser任务", task, "退回任务队列.")
+                    this.log_info("chk_new_task", "Parser Task", task, "Send Back to Task Queue.")
                     return
                 }
 
                 if (task.node_id === this.node_id
                     && task.scope === "task"
                     && task.action === "stop") {
-                    //  Stop 任务
-                    this.stop_bee(task.id)
+                    //  Stop  Task
+                    this.stop_bee(task.task_id_for_stop)
                     // task exec response
                     this.update_task_result(task, "success", `success stop task:${task.id}.`)
-                    //  Stop 任务， Update node_stat
+                    //  Stop  Task,  Update node_stat
                     this.update_node_stat()
-                    this.log_info("chk_new_task", "Task Stop任务", task, "Task Stop任务,处理完毕.")
+                    this.log_info("chk_new_task", "Task-Stop Task", task, "Task-Stop Task,Completed.")
                     return
                 }
 
                 if (task.node_id === this.node_id
                     && task.scope === "node"
                     && task.action === "chg_task_limit") {
-                    // 修改任务限制
+                    // 修改 Task限制
                     this.task_limit = task.task_limit
                     this.update_task_result(task, "success", `success change task_limit to ${task.task_limit} on node: ${this.node_id}.`)
                     this.update_node_stat()
-                    this.log_info("chk_new_task", "Chk Task Limit", task, "Task Limit Change,处理完毕.")
+                    this.log_info("chk_new_task", "Chk Task Limit", task, "Task Limit Change,Completed.")
                     return
                 }
 
                 if (task.action === "start") {
                     if (this.bees.length >= this.task_limit) {
-                        // 任务数已经达到限制，退回任务队列
+                        // Over Node Task Limit, Send Back to Task Queue
                         this.redis.rpush(this.task_req_queue, JSON.stringify(task))
-                        this.log_info("chk_new_task", "任务数已经达node 限制", task, "任务数已经达到限制，退回任务队列.")
+                        this.log_info("chk_new_task", "Over Node Task Limit", task, "Over Node Task Limit, Send Back to Task Queue.")
                         return
                     }
 
-                    // 生成新的bee， finish 采集任务
+                    // 生成New 的bee,  finish 采集 Task
                     const bee = new Bee(task, this.node_id, this.node_type)
                     // Bee在ssh_on_ready后会自动Start 采集,不需要调用start()
                     // bee.start();
                     // 加入bees
                     this.bees.push(bee)
+
+                    this.task_count = this.bees.length
+
                     // task exec response
                     this.update_task_result(task, "success", `success start task:${task.id}.`)
-                    // 增加新Task，Start 新的Bee， Update node_stat
+                    // 增加New Task, Start New 的Bee,  Update node_stat
                     this.update_node_stat()
-                    this.log_info("chk_new_task", "Start 新Bee", bee, "Start BeeSuccess.")
+                    const bee_stat = {
+                        bee_id: bee.id,
+                        bee_action: bee.action,
+                        bee_health: bee.health,
+                        bee_state: bee.state,
+                        bee_ssh_state: bee.ssh_state
+                    }
+                    this.log_info("chk_new_task", "Start New Bee", bee_stat, "Start Bee Success.")
                     return
                 } // end of if (task.action === "start")
 
                 // other cases, send task back
                 this.redis.rpush(this.task_req_queue, JSON.stringify(task))
-                this.log_info("chk_new_task", "未知任务type ", task.action, "未知任务type ，退回任务队列.")
+                this.log_info("chk_new_task", "Unknown Task Type", task.action, "Unknown Task Type, Send Back to Task Queue.")
                 return
-            } // end of get 任务
+            } // end of get  Task
         })
     } // end of chk_new_task
 
@@ -225,6 +255,10 @@ class Hive {
 
         // check alive bees
         this.bees = this.bees.filter((bee) => bee.health === true)
+
+        if (this.node_stat === undefined || this.node_stat === null) {
+            this.node_stat = {}
+        }
 
         //  Update node_stat中的node信息
         this.node_stat.id = this.node_id
@@ -265,9 +299,9 @@ class Hive {
             JSON.stringify(this.node_stat),
             (err, res) => {
                 if (err) {
-                    this.log_error("update_node_stat", " Update node_stat fail .", `node_stat_hset:${this.node_stat_hset}, node_id:${this.node_id}`, err, " Update node_stat fail .")
+                    this.log_err("update_node_stat", " Update node_stat fail .", `node_stat_hset:${this.node_stat_hset}, node_id:${this.node_id}`, err, " Update node_stat fail .")
                 } else {
-                    this.log_info("update_node_stat", " Update node_stat", `hset_response:${res}`, " Update node_statSuccess.")
+                    // this.log_info("update_node_stat", " Update node_stat", `hset_response:${res}`, " Update Node State Success.")
                 }
             }
         )
@@ -277,16 +311,19 @@ class Hive {
         //  Stop bee
         const bee_need_stop = this.bees.filter((bee) => bee.id === bee_id)[0]
         if (!bee_need_stop) {
-            this.log_error("stop_bee", "get Bee", `bee_id:${bee_id}`, "undefined", "get Bee fail .")
+            this.log_err("stop_bee", "get Bee", `bee_id:${bee_id}`, "undefined", "get Bee fail .")
             return
         }
 
         bee_need_stop.stop()
         this.log_info("stop_bee", " Stop bee", `Stopped Bee ID:${bee_need_stop.id}`, " Stop beeSuccess.")
 
-        // 从bees中删除bee
+        // 从bees中Delete Bee
         this.bees = this.bees.filter((bee) => bee.id !== bee_id)
-        this.log_info("stop_bee", "删除Bee", `Removed Bee ID:${bee_id}`, "从Bees中删除beeSuccess.")
+
+        this.task_count = this.bees.length
+
+        this.log_info("stop_bee", "Delete Bee", `Removed Bee ID:${bee_id}`, "Delete bee from Bees Success.")
     } // end of stop_bee
 
     stop() {
@@ -297,19 +334,22 @@ class Hive {
         //  Stop bees
         this.bees.forEach((bee) => bee.stop())
         this.bees = []
-        this.log_info("stop", " Stop  all 采集Bees", `Number of Bee:${this.bees.length}`, " Stop  all 采集BeesSuccess.")
 
-        // 删除node_stat
+        this.task_count = this.bees.length
+
+        this.log_info("stop", "Stop all Bees", `Number of Bee:${this.bees.length}`, "Stop all Bees Success.")
+
+        // Delete node_stat
         this.redis.hdel(this.node_stat_hset, this.node_id)
-        this.log_info("stop", "删除node_stat", `node_stat_hset:${this.node_stat_hset}, node_id:${this.node_id}`, "删除node_statSuccess.")
+        this.log_info("stop", "Delete node_stat", `node_stat_hset:${this.node_stat_hset}, node_id:${this.node_id}`, "Delete Node State Success.")
 
         //  Stop node state update
         clearInterval(this.update_node_stat_interval)
         this.log_info("stop", " Stop node state update", "update_node_stat_interval", " Stop node state updateSuccess.")
 
         // 断开redis连接
-        this.redis.disconnect()
-        this.log_info("stop", "Redis Disconnect", "redis.disconnect()", "Redis Disconnected.")
+        this.redis.quit()
+        this.log_info("stop", "Redis Disconnect", "redis.quit()", "Redis Disconnected.")
     } // end of stop
 
     update_task_result(task, result, desc) {
@@ -350,7 +390,7 @@ class Hive {
             },
             msg
         )
-    } // end of log_error
+    } // end of log_err
 
 } // end of class Hive
 

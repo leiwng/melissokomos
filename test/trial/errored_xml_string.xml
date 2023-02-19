@@ -1,0 +1,38 @@
+<LZYH>
+    <Message id="Message">
+        <Head>
+            <TransCode>ZX0015</TransCode>
+            <ReturnCode>000000</ReturnCode>
+            <ReturnMessage>success</ReturnMessage>
+            <TransJnlno>92932520</TransJnlno>
+            <TrsTimestamp>2018-03-21 15:53:18</TrsTimestamp>
+        </Head>
+        <Body>
+            <InstId>YH0000001</InstId>
+            <IsIndividual>1</IsIndividual>
+            <HoldAmount>45129.90</HoldAmount>
+            <LastProfit>90.63</LastProfit>
+            <TotalProfit>3129.90</TotalProfit>
+            <GrowthRate>0.06572</GrowthRate>
+            <RedeemableVol>45129.90</RedeemableVol>
+            <TotalVal>45129.90</TotalVal>
+            <FastRedeemVol>45129.9</FastRedeemVol>
+            <ErrorCode>0000</ErrorCode>
+            <ErrorMessage>操作成功</ErrorMessage>
+        </Body>
+    </Message>
+    <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod>
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></ds:SignatureMethod>
+            <ds:Reference URI="#Message">
+                <ds:Transforms>
+                    <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform>
+                </ds:Transforms>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod>
+                <ds:DigestValue>We8Xf0sVOTA0J/0zEIGXCSiBCt8=</ds:DigestValue>
+            </ds:Reference>
+        </ds:SignedInfo>
+        <ds:SignatureValue>asSUV29Vr6/SLfe+ac5ySNr8i0pQu/chyI3qFI4P+W1Tmtu5Jo1OcsJ8dlfve5cRvZWzMJVMsppZlROHqerVVhNa32sK45jUA63Za+s2WYB/rgc40fUrYBuv/gZyewHRsHdkiFDZOMAj7RLHov/Ba6vNrHNzQR/YuQDNYOSVReg=</ds:SignatureValue>
+    </ds:Signature>
+</LZYH>

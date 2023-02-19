@@ -1,9 +1,9 @@
 /***
- * Recipe是酿造秘方的抽象，不同得蜂蜜有不同的酿造酿方。
+ * Recipe是酿造秘方的抽象, 不同得蜂蜜有不同的酿造酿方。
 ***/
 
 const Redis = require("ioredis")
-const logger = require("./recipe_logger")
+const logger = require("./cellar_logger")(require("path").basename(__filename))
 
 
 class Recipe {
@@ -16,6 +16,7 @@ class Recipe {
         this.node_type = process.argv[7]
         this.sub_client = null
         this.pub_client = null
+        this.collector_meta_list = []
 
         this.msg_handler = msg_handler
 
@@ -73,7 +74,7 @@ class Recipe {
             )
             process.send("stopped")
             setTimeout(() => {
-                // 发送队列任务
+                // 发送队列 Task
                 process.exit(0)
             }, 1000)
         })
@@ -118,6 +119,18 @@ class Recipe {
         this.messageHandlerWrapper = this.messageHandlerWrapper.bind(this)
         this.collect_meta_data = this.collect_meta_data.bind(this)
         this.save_meta_data = this.save_meta_data.bind(this)
+        // this.update_last_act = this.update_last_act.bind(this)
+        this.set_state = this.set_state.bind(this)
+
+        logger.info(
+            {
+                node_id: this.node_id,
+                node_type: this.node_type,
+                func: "Recipe class -> constructor",
+                step: "constructor",
+            },
+            "Recipe class loaded."
+        )
     } // end of constructor
 
     start() {
@@ -151,6 +164,16 @@ class Recipe {
         })
 
         this.sub_client.on("message", this.messageHandlerWrapper)
+
+        logger.info(
+            {
+                node_id: this.node_id,
+                node_type: this.node_type,
+                func: "Recipe class -> start",
+                step: "start",
+            },
+            "Brew thru Recipe start success."
+        )
     } // end of start()
 
     stop() {
@@ -184,21 +207,31 @@ class Recipe {
             })
 
             this.sub_client.removeListener("message", this.messageHandlerWrapper)
-            this.sub_client.disconnect()
+            this.sub_client.quit()
         }
 
         if (this.pub_client) {
-            this.pub_client.disconnect()
+            this.pub_client.quit()
         }
-    } // end of stop()
 
-    update_last_act(message) {
-        // console.log('update_last_act', message)
-        this.last_act.count++
-        this.last_act.message = message
-        let now = new Date()
-        this.last_act.ts = now.getTime()
+        logger.info(
+            {
+                node_id: this.node_id,
+                node_type: this.node_type,
+                func: "Recipe class -> stop",
+                step: "disconnect redis",
+            },
+            "Brew thru Recipe Stopped."
+        )
     }
+
+    // update_last_act(message) {
+    //     // console.log('update_last_act', message)
+    //     this.last_act.count++
+    //     this.last_act.message = message
+    //     let now = new Date()
+    //     this.last_act.ts = now.getTime()
+    // }
 
     sendResult(message) {
         let msg = this.collect_meta_data(message)
@@ -209,18 +242,36 @@ class Recipe {
 
         try {
             this.pub_client.publish(this.pub_channel, JSON.stringify(msg))
-        } catch(err) {
-            console.log("Recipe.js", "sendResult Error", err)
+        } catch (err) {
+            logger.error(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Recipe->sendResult",
+                    step: "pub_client.publish",
+                    err: err
+                },
+                "Recipe pub_client publish Errored."
+            )
         }
 
-        this.update_last_act(JSON.stringify(msg))
+        // this.update_last_act(JSON.stringify(msg))
     }
 
     sendError(message, info, error) {
         try {
             this.pub_client.publish(this.pub_channel, JSON.stringify({message: message, info: info, error: error}))
         } catch (err) {
-            console.log("Recipe.js", "sendError Error", err)
+            logger.error(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Recipe->sendError",
+                    step: "pub_client.publish",
+                    err: err
+                },
+                "Recipe pub_client publish Errored."
+            )
         }
     }
 
@@ -245,8 +296,17 @@ class Recipe {
                 try {
                     message = JSON.parse(message)
                 }
-                catch(err) {
-                    console.log("collect_meta_data Error", err)
+                catch (err) {
+                    logger.error(
+                        {
+                            node_id: this.node_id,
+                            node_type: this.node_type,
+                            func: "Recipe->collect_meta_data",
+                            step: "JSON.parse",
+                            err: err
+                        },
+                        "Recipe collect_meta_data JSON.parse Errored."
+                    )
                     // this.sendError(message, 'collectorMetaData', err)
                 }
             }
@@ -272,7 +332,16 @@ class Recipe {
             return json.msg
         }
         catch(err) {
-            // console.log(err)
+            logger.error(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Recipe->save_meta_data",
+                    step: "JSON.parse",
+                    err: err
+                },
+                "save_meta_data JSON.parse Error:"
+            )
             return message
         }
     }
@@ -283,8 +352,17 @@ class Recipe {
         try {
             this.msg_handler(this, msg)
         }
-        catch(err) {
-            console.log("messageHandlerWrapper Error", err, message)
+        catch (err) {
+            logger.error(
+                {
+                    node_id: this.node_id,
+                    node_type: this.node_type,
+                    func: "Recipe->messageHandlerWrapper",
+                    step: "msg_handler Exception",
+                    err: err
+                },
+                "messageHandlerWrapper->msg_handler Exception:"
+            )
             // this.sendError(message, "messageHandlerWrapper", new Error("msg_handler Error"))
         }
     }

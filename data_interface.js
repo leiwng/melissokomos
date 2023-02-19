@@ -1,43 +1,43 @@
 /***
 # ChangeLog
 - 10-24
-  - 修改ID字段名为TASKID，防止和其他ID冲突
+  - 修改ID字段名为TASKID, 防止和其他ID冲突
 - 10-23
-  - 修改最大任务数消息体
+  - 修改最大 Task数消息体
     - 定义接收和返回消息体
-    - node 首次Start 可以从环境变量读取到默认最大任务数
-    - 接收到命令后，修改最大任务数
+    - node 首次Start 可以从环境变量读get 到默认最大 Task数
+    - 接收到命令后, 修改最大 Task数
 - 10-21
-  -  Stop 任务消息体
-    - 取消worknode字段，node 接到广播只需要判断自身有无任务即可
-    - TYPE：Active，Passive，Agent，没有parsertype 。因为一条任务子任务是采集+解析成对出现，所以只需要发一条广播，采集node 需要判断是Active，Passive，Agent哪一种再执行，解析node 接到广播，无需判断type 就可执行
+  -  Stop  Task消息体
+    - get 消worknode字段, node 接到广播只需要判断自身有无 Task即可
+    - TYPE：Active, Passive, Agent, 没有parsertype 。因为一条 Task子 Task是采集+解析成对出现, 所以只需要发一条广播, 采集node 需要判断是Active, Passive, Agent哪一种再执行, 解析node 接到广播, 无需判断type 就可执行
 
 - 10-15
-  - 消息体新增ACTION字段，Start 任务Start， Stop 任务Stop
-  - 新增 Stop 任务消息体,worknode字段预留，后续提供
+  - 消息体New 增ACTION字段, Start  TaskStart,  Stop  TaskStop
+  - New 增 Stop  Task消息体,worknode字段预留, 后续提供
 ***/
 /***
-1. 任务接口
+1.  Task接口
 
 - 中文需要unicode吗？
 - CHANNEL字段
-  - 如果用push就是队列名称，如果是PUB/SUB就是频道名称
-  - COLLECTOR和PARSER之间，之前定是的走队列
+  - 如果用push就是队列名称, 如果是PUB/SUB就是频道名称
+  - COLLECTOR和PARSER之间, 之前定是的走队列
   - PARSER向外是用PUB/SUB
 ***/
 
 /***
-1.1 新建任务
+1.1 New 建 Task
 
-1.1.1 新建angent采集
+1.1.1 New 建angent采集
 
-1.1.1.1 接收任务
+1.1.1.1 接收 Task
 ***/
 
-// 任务下达队列
+//  Task下达队列
 process.env.SINGED_TASK_QUEUE = SINGED_TASK_QUEUE
 
-// Agent采集任务
+// Agent采集 Task
 AgentTaskSample = {
   "TASKID": 12,
   "ACTION": "Start",
@@ -63,7 +63,7 @@ AgentTaskSample = {
   - 返回结果 队列名（NODE方发送）：SINGED_TASK_RETURN_QUEUE
 ***/
 
-// Agent采集任务返回
+// Agent采集 Task返回
 AgentTaskReturnSample = {
   "TASKID": 11,
   "ACTION": "Started",
@@ -71,10 +71,10 @@ AgentTaskReturnSample = {
   "RESULT": "Success",
   "DESC": ""
 }
-// - 说明：后台并不关心是什么采集type ，我只需要区分是采集或者解析
+// - 说明：后台并不关心是什么采集type , 我只需要区分是采集或者解析
 
 /***
-1.1.2 新建Active主动采集任务
+1.1.2 New 建Active主动采集 Task
 
 1.1.2.1 接收
 
@@ -84,7 +84,7 @@ ActiveTaskSample = {
   "TASKID": 11,
   "ACTION": "Start",
   "TYPE": "Active",
-  "NAME": "主动采集任务",
+  "NAME": "主动采集 Task",
   "DESC": "DESC",
 
   "INPUT": {
@@ -107,11 +107,11 @@ ActiveTaskSample = {
 }
 /***
 - 说明
-  - COLLECTOR_TYPE：任务type
+  - COLLECTOR_TYPE： Tasktype
     - Time：每天按时间执行
     - Interval：间隔时间执行
     - OneShot：一次性
-  - TRIGGER：时间，看需要我转成秒数不？
+  - TRIGGER：时间, 看需要我转成秒数不？
 ***/
 
 /***
@@ -127,7 +127,7 @@ ActiveTaskReturnSample = {
 }
 
 /***
-1.1.3 新建被动采集任务
+1.1.3 New 建被动采集 Task
 1.1.3.1 接收
 - 队列名：SINGED_TASK_QUEUE
 ***/
@@ -158,7 +158,7 @@ PassiveTaskSample = {
 }
 /***
 - 说明
-  - COLLECTOR_TYPE：任务type
+  - COLLECTOR_TYPE： Tasktype
     - FileTail
     - LongScript
 ***/
@@ -176,7 +176,7 @@ PassiveTaskReturnSample = {
 }
 
 /***
-1.1.4 新建Parser解析任务
+1.1.4 New 建Parser解析 Task
 1.1.4.1 接收
   - 队列名：SINGED_TASK_QUEUE
 ***/
@@ -207,8 +207,8 @@ ParserTaskSample = {
 
 
 /***
-1.2.  Stop 任务
-1.2.1 任务接收
+1.2.  Stop  Task
+1.2.1  Task接收
 - 接收命令频道名（NODE方接收）：SINGED_TASK_CHG_REQ_CH
 ***/
 StopTaskSample = {
@@ -220,9 +220,9 @@ StopTaskSample = {
 }
 /***
   说明:
-    - 一条任务子任务是采集+解析成对出现，所以只需要发一条广播
-    - 采集node 需要判断是Active，Passive，Agent哪一种再执行
-    - 解析node 接到广播，无需判断type 即可执行
+    - 一条 Task子 Task是采集+解析成对出现, 所以只需要发一条广播
+    - 采集node 需要判断是Active, Passive, Agent哪一种再执行
+    - 解析node 接到广播, 无需判断type 即可执行
 ***/
 /***
 1.2.2 执行返回
@@ -251,7 +251,7 @@ nodeStartSample = {
 }
 
 /***
-2.2 改变node 最大任务数
+2.2 改变node 最大 Task数
 2.2.1 接收
   - 接收命令频道名（NODE方接收）：SINGED_NODE_CHG_REQ
 ***/

@@ -6,7 +6,7 @@ class Recipe_map {
     constructor() {
         this.map = new Map()
         this.scanTime = 10*60*1000 //10 minutes
-        this.timeout = 20*60*1000 //20 minutes
+        this.timeout = 30*60*1000 //20 minutes
         this.add = this.add.bind(this)
         this.get = this.get.bind(this)
         this.delete = this.delete.bind(this)
@@ -56,22 +56,3 @@ class Recipe_map {
 }
 
 module.exports = Recipe_map
-        }
-    }
-
-    delete(key) {
-        this.map.delete(key)
-    }
-
-    scan(){
-        var keys = this.map.keys()
-        for (let key of keys) {
-            var time = this.map.get(key).t
-            var now = new Date()
-            if(now-time >= this.timeout){
-                this.delete(key)
-            }
-        }
-    }
-}
-module.exports =  Recipe_map

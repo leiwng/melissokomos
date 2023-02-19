@@ -1,11 +1,11 @@
 /***
- * Brewer 负责通过 ssh 通道从远程目标机上被动获取日志数据
- * Brewer 实现数据采集的自管理 self-management，包括：
- * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动 Stop 接受新的采集任务
- * 2. 自动读取采集任务,并交由 Brewer 执行
- * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
+ * Brewer 负责通过 ssh 通道从远程目标机上被动获get 日志数据
+ * Brewer 实现数据采集的自管理 self-management, 包括：
+ * 1. 以容器运行, 对自身负载进行监控, 当负载过高时, 自动 Stop 接受New 的采集 Task
+ * 2. 自动读get 采集 Task,并交由 Brewer 执行
+ * 3. NOT 正常终止, 重启后会优先恢复现有 Task, 然后再获get New  Task
 ***/
-const logger = require("./brewer_logger")
+const logger = require("./cellar_logger")(require("path").basename(__filename))
 const { fork } = require("node:child_process")
 
 class Brewer {
@@ -16,7 +16,7 @@ class Brewer {
         this.stop = this.stop.bind(this)
         this.on_recipe_stopped = this.on_recipe_stopped.bind(this)
 
-        // 根据任务参数初始化对象属性
+        // 根据 Task参数初始化对象属性
         this.init(task, node_id, node_type)
     } // end of constructor
 

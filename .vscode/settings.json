@@ -1,8 +1,7 @@
 {
     "deepscan.enable": true,
     "cSpell.words": [
-        "blpop",
-        "brpop",
+        "lpop",
         "childs",
         "cuckoobee",
         "Cuckooo",
@@ -19,8 +18,7 @@
         "LINDEX",
         "linebreak",
         "LLEN",
-        "lpop",
-        "lpush",
+        "rpush",
         "LRANGE",
         "LZYH",
         "Masonbee",

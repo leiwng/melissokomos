@@ -11,11 +11,11 @@ const levels = {
     debug: 10,
 }
 
-const logger = (model_name) => {
+const logger = (model_name, log_level, log_dest) => {
     return pino(
         {
             name: model_name,
-            level: "info",
+            level: log_level,
             customLevels: levels,
             useOnlyCustomLevels: true,
             formatter: (level, message) => {
@@ -25,16 +25,11 @@ const logger = (model_name) => {
             transport: {
                 target: "pino-pretty",
                 options: {
-                    colorize: true,
-                    translateTime: true
+                    colorize: true
                 }
-            },
-            destination: [
-                { dest: process.stdout, sync: true },
-                { dest: process.stderr, sync: true },
-                { dest: `${__dirname}/cellar.log`, sync: true }
-            ]
-        }
+            }
+        },
+        pino.destination(log_dest)
     )
 }
 

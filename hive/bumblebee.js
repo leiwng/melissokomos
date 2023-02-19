@@ -1,13 +1,13 @@
 /***
- * Bumblebee 负责通过 ssh 通道从远程目标机上被动获取日志数据
- * Bumblebee 实现数据采集的自管理 self-management，包括：
- * 1. 以容器运行，对自身负载进行监控，当负载过高时，自动 Stop 接受新的采集任务
- * 2. 自动读取采集任务,并交由 Bumblebee 执行
- * 3. 非正常终止，重启后会优先恢复现有任务，然后再获取新任务
+ * Bumblebee 负责通过 ssh 通道从远程目标机上被动获get 日志数据
+ * Bumblebee 实现数据采集的自管理 self-management, 包括：
+ * 1. 以容器运行, 对自身负载进行监控, 当负载过高时, 自动 Stop 接受New 的采集 Task
+ * 2. 自动读get 采集 Task,并交由 Bumblebee 执行
+ * 3. NOT 正常终止, 重启后会优先恢复现有 Task, 然后再获get New  Task
 ***/
 const { Client } = require("ssh2")
 const Redis = require("ioredis")
-const logger = require("./bumblebee_logger")
+const logger = require("./hive_logger")(require("path").basename(__filename))
 
 
 class Bumblebee {
@@ -26,14 +26,14 @@ class Bumblebee {
         this.start = this.start.bind(this)
         this.stop = this.stop.bind(this)
 
-        // 根据任务参数初始化对象属性
+        // 根据 Task参数初始化对象属性
         this.init(task, node_id, node_type)
 
         if (this.health === false) {
             return
         }
 
-        // 部署任务
+        // 部署 Task
         try {
             this.ssh
                 .on("ready", this.ssh_on_ready)
@@ -163,7 +163,7 @@ class Bumblebee {
             },
             "Bumblebee, SSH on ready"
         )
-        // ssh 链路ready，可以开始采集工作
+        // ssh 链路ready, 可以开始采集工作
         if (this.action === "start") {
             this.start()
         }
@@ -171,7 +171,6 @@ class Bumblebee {
 
     ssh_on_error(err) {
         this.set_state(false, "error", "ssh_on_error")
-        console.log(err)
         logger.error(
             {
                 bee_id: this.id,
@@ -311,7 +310,7 @@ class Bumblebee {
 
             //空行
             if (data.length === 1 && data[0] === 10) {
-                //收到回车，把缓存的数据发送到redis
+                //收到回车, 把缓存的数据发送到redis
                 if (this.ssh_data_buffer !== "") {
 
                     let now = new Date()
@@ -328,7 +327,7 @@ class Bumblebee {
                 return
             }
 
-            // 非空行
+            // NOT 空行
             // 判断收到的数据是否以回车符结束
             let end_with_LF = false
             if (data[data.length - 1] === 10) {
@@ -339,12 +338,12 @@ class Bumblebee {
             this.ssh_data_buffer += data.toString("utf-8")
             let lines = this.ssh_data_buffer.split("\n")
 
-            // 没收到回车符，一行未结束，继续囤积
+            // 没收到回车符, 一行未结束, 继续囤积
             if (lines.length === 1) {
                 return
             }
 
-            // 收到回车符，有多行数据待处理，且只处理到倒数第二行
+            // 收到回车符, 有多行数据待处理, 且只处理到倒数第二行
             let now = new Date()
             for (let i = 0; i < lines.length - 1; i++) {
                 const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[i] })
@@ -354,7 +353,7 @@ class Bumblebee {
                 this.line_count += 1
                 this.uptime = Date.now() - this.start_ts
             }
-            // 最后一行数据，如果以回车符结束，就清空缓存，否则缓存起来
+            // 最后一行数据, 如果以回车符结束, 就清空缓存, 否则缓存起来
             if (end_with_LF) {
                 const data_line = JSON.stringify({ host: this.ssh_host, startTs: now.getTime(), msg: lines[lines.length - 1] })
 
@@ -398,7 +397,7 @@ class Bumblebee {
         }
 
         if (this.pub !== undefined) {
-            this.pub.disconnect()
+            this.pub.quit()
         }
 
         this.set_state(false, "stopped", "ssh_end")

@@ -25,7 +25,7 @@ sINGED_NODE_STATE_HSET
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
-    "action": "start|stop|chg_task_limit",
+    "action": "start|chg_task_limit",
     "desc": "task_desc",
     "in": {
         "redis_url": "redis://192.168.0.77:6379/0",
@@ -51,6 +51,43 @@ sINGED_NODE_STATE_HSET
 }
 ```
 
+##### AGENT STOP-TASK REQUEST
+
+```json
+{
+    "id": "id",
+    "name": "name",
+    "node_id": "node_id",
+    "scope": "task",
+    "type": "agent",
+    "action": "stop",
+    "task_id_for_stop": "active-task-001",
+    "desc": "task_desc",
+    "in": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "encoding": "utf-8",
+        "parameter": "agent collector parameter string"
+    },
+    "out": {
+        "redis_url": "redis://192.168.0.77:6379/0",
+        "redis_pub_ch": "mbank6-customer-78.99.12.11",
+    }
+}
+```
+
+##### AGENT STOP-TASK RESPONSE
+
+```json
+{
+    "the copy of the task content": "",
+    "node_id": "node_id",
+    "node_type": "node_type",
+    "result": "success|fail",
+    "result_desc": "success|fail reason|error desc"
+}
+```
+
+
 #### ACTIVE TASK
 
 ##### ACTIVE TASK REQUEST
@@ -62,7 +99,7 @@ sINGED_NODE_STATE_HSET
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
-    "action": "start|stop|chg_task_limit",
+    "action": "start|chg_task_limit",
     "desc": "task_desc",
     "in": {
         "ssh_host": "98.11.56.21",
@@ -104,7 +141,7 @@ sINGED_NODE_STATE_HSET
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
-    "action": "start|stop|chg_task_limit",
+    "action": "start|chg_task_limit",
     "desc": "task_desc",
     "in": {
         "ssh_host": "98.11.56.21",
@@ -144,7 +181,7 @@ sINGED_NODE_STATE_HSET
     "node_id": "node_id",
     "scope": "task|node",
     "type": "agent|active|passive|parser",
-    "action": "start|stop|chg_task_limit",
+    "action": "start|chg_task_limit",
     "desc": "task_desc",
     "recipe": "./path/to/recipe/mbank6_app.js",
     "in": {

@@ -3,13 +3,13 @@
 ## old env
 
 ```python
-# 新下达任务队列名
+# New 下达 Task队列名
 SINGED_TASK_QUEUE="SINGED_TASK_QUEUE"
-# 现有任务变更请求通道名
+# 现有 Task变更请求通道名
 SINGED_TASK_CHG_REQ_CH="SINGED_TASK_CHG_REQ_CH"
-# 现有任务变更返回通道名
+# 现有 Task变更返回通道名
 SINGED_TASK_RETURN_QUEUE="SINGED_TASK_RETURN_QUEUE"
-# 任务state update表名
+#  Taskstate update表名
 SINGED_TASK_STAT_HSET="SINGED_TASK_STAT_HSET"
 
 # node state update表名
@@ -33,7 +33,7 @@ env.SINGED_TASK_STAT_HSET
 env.SINGED_NODE_STAT_HSET
 ```
 
-## 任务（单个）
+##  Task（单个）
 
 ### 被动采集 Passive
 

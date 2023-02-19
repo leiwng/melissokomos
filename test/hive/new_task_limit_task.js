@@ -16,4 +16,4 @@ let task = {
 const redis = new Redis(process.env.SINGED_REDIS_URL)
 redis.rpush(process.env.SINGED_TASK_REQ_QUEUE, JSON.stringify(task))
 
-// redis.disconnect();
+redis.quit();

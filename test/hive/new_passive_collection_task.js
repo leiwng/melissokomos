@@ -5,7 +5,6 @@ require("dotenv").config()
 let task = {
     id: "1",
     name: "Passive Collection Task",
-    node_id: process.env.SINGED_NODE_ID,
     scope: "task",
     type: "passive",
     action: "start",
@@ -28,11 +27,11 @@ const redis = new Redis(process.env.SINGED_REDIS_URL)
 
 const loop_cnt = process.argv[2] || 3
 for (let i = 0; i < loop_cnt; i++) {
-    task.id = `task-${i}`
+    task.id = `passive-collector-task-${i}`
     task.name = `Passive Collection ${task.id}`
     task.out.redis_pub_ch = `mbank50-app-log-host77-${i}`
     console.log(task.out.redis_pub_ch)
     redis.rpush(process.env.SINGED_TASK_REQ_QUEUE, JSON.stringify(task))
 }
 
-// redis.disconnect();
+redis.quit()

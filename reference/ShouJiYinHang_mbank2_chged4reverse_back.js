@@ -2,8 +2,8 @@
 /*
 ---功能: 手机银行应用日志_1.0 (mbank.log,20181027）
 ---作者: 王磊
----说明: 删除报文中的<EqmtMg>字段
----更新: (mbank.log,20190218）a.请求和响应匹配修改为使用流水号;b.修改匹配开始的方式和增加消息类型;
+---说明: Delete 报文中的<EqmtMg>字段
+---更New : (mbank.log,20190218）a.请求和响应匹配修改为使用流水号;b.修改匹配开始的方式和增加消息类型;
 
 */
 "use strict"
@@ -69,7 +69,7 @@ var REG_FORM_4_REQ = /INFO {2}cn.com.yitong.ares.net.[a-z]{2,10}.SocketClient:[0
 
 var REG_FORM_4_RSP = /INFO {2}cn.com.yitong.ares.net.[a-z]{2,10}.SocketClient:[0-9]{2,3} - response data:/
 
-var REG_FORM_5_REQ = /，登录信息====客户姓名：/
+var REG_FORM_5_REQ = /, 登录信息====客户姓名：/
 
 //var REG_FORM_5_RSP = //;
 
@@ -121,7 +121,7 @@ var parseXmlMsg = function parseXmlMsg(parser) {
 
     try {
 
-        // 将XML格式字串转换为JSON对象，返回值在xmlJson中，错误信息在err中
+        // 将XML格式字串转换为JSON对象, 返回值在xmlJson中, 错误信息在err中
 
         (0, _xml2js.parseString)( msg1, { explicitArray: false }, function (err, xmlJson) {
 
@@ -217,7 +217,7 @@ var parseLoginInfo = function parseLoginInfo (str) {
 
 
 
-//扁平化嵌套的json，如存在同名字段取后出现的值
+//扁平化嵌套的json, 如存在同名字段get 后出现的值
 
 function flat_json(obj, final) {
 

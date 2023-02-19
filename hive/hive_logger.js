@@ -1,4 +1,4 @@
-const pinoLogger = require("pino")
+const pino = require("pino")
 
 const levels = {
     emerg: 80,
@@ -11,17 +11,31 @@ const levels = {
     debug: 10,
 }
 
-module.exports = pinoLogger(
-    {
-        name: "Hive",
-        level: process.env.PINO_LOG_LEVEL || "debug",
-        customLevels: levels,
-        useOnlyCustomLevels: true,
-        formatters: {
-            level: (label) => {
-                return { level: label }
+const logger = (model_name) => {
+    return pino(
+        {
+            name: model_name,
+            level: "info",
+            customLevels: levels,
+            useOnlyCustomLevels: true,
+            formatter: (level, message) => {
+                const now = new Date()
+                return `[${now.toISOString()}] ${level}: ${message}`
             },
-        },
-    },
-    pinoLogger.destination(`${__dirname}/melissokomos.log`)
-)
+            transport: {
+                target: "pino-pretty",
+                options: {
+                    colorize: true,
+                    translateTime: true
+                }
+            },
+            destination: [
+                { dest: process.stdout, sync: true },
+                { dest: process.stderr, sync: true },
+                { dest: `${__dirname}/hive.log`, sync: true }
+            ]
+        }
+    )
+}
+
+module.exports = logger

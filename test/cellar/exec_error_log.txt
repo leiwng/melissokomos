@@ -1,0 +1,380 @@
+leiwn@LEIWLP01  D:\prj\github\melissokomos\cellar   main ≣ +17 ~20 -13 !                                                                [19:12]
+❯ node .\cellar.js
+[19:12:05.578] DEBUG (cellar.js/26724): node_stat is NULL.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar -> get_tasks_from_node_stat"
+    step: "From node_stat get node_tasks"
+    node_tasks: []
+[19:12:05.579] DEBUG (cellar.js/26724):  No Left task, brewers=[].
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar->resume_tasks"
+    step: "brewers=[]"
+[19:12:05.580] DEBUG (cellar.js/26724): Start New Task Listening.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_req_queue: "SINGED_TASK_REQ_QUEUE"
+    func: "Cellar->start"
+    step: "Start chk_new_task_interval Func"
+    chk_task_interval: "25"
+[19:12:05.580] DEBUG (cellar.js/26724): Start Node State Update Routinely.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar->start"
+    step: "Set update_node_stat_interval"
+    update_node_stat_interval: "26"
+[19:12:05.601] DEBUG (cellar.js/26724): found node with id: cellar-987654321 in node_stat_hset.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar -> get_node_stat"
+    step: "Get Node State From Node-ID SUCCESS"
+    node_stat: {
+      "id": "cellar-987654321",
+      "type": "cellar",
+      "start_ts": 1676282458161,
+      "uptime": 10019,
+      "task_limit": "3",
+      "task_count": 0,
+      "redis_url": "redis://192.168.0.77:6379/0",
+      "task_req_queue": "SINGED_TASK_REQ_QUEUE",
+      "task_rsq_queue": "SINGED_TASK_RSP_QUEUE",
+      "node_stat_hset": "SINGED_NODE_STAT_HSET",
+      "task_list": []
+    }
+D:\Prj\github\melissokomos\cellar\recipe_map.js:59
+        }
+        ^
+
+SyntaxError: Unexpected token '}'
+    at internalCompileFunction (node:internal/vm:74:18)
+    at wrapSafe (node:internal/modules/cjs/loader:1141:20)
+    at Module._compile (node:internal/modules/cjs/loader:1182:27)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1272:10)
+    at Module.load (node:internal/modules/cjs/loader:1081:32)
+    at Module._load (node:internal/modules/cjs/loader:922:12)
+    at Module.require (node:internal/modules/cjs/loader:1105:19)
+    at require (node:internal/modules/cjs/helpers:103:18)
+    at Object.<anonymous> (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:7:20)
+    at Module._compile (node:internal/modules/cjs/loader:1218:14)
+
+Node.js v18.13.0
+[19:12:24.171] DEBUG (brewer.js/26724): Brewer, init finished
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+    task: "{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}}"
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+[19:12:24.193] DEBUG (cellar.js/26724): SuccessStart Brewer.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    func: "Cellar->chk_new_task"
+    step: "Start Brewer."
+[19:12:24.196] DEBUG (cellar.js/26724): Start 鏂癰rewer.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    brewer_id: "parser-task-1"
+    brewer_name: "Parser Task: parser-task-1"
+    func: "Cellar->chk_new_task"
+    step: "Start brewer Success."
+[19:12:24.196] DEBUG (cellar.js/26724):  Update Node State Success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    node_state: "{\"id\":\"cellar-987654321\",\"type\":\"cellar\",\"start_ts\":1676286725573,\"uptime\":18621,\"task_limit\":\"3\",\"task_count\":1,\"redis_url\":\"redis://192.168.0.77:6379/0\",\"task_req_queue\":\"SINGED_TASK_REQ_QUEUE\",\"task_rsq_queue\":\"SINGED_TASK_RSP_QUEUE\",\"node_stat_hset\":\"SINGED_NODE_STAT_HSET\",\"task_list\":[{\"task_content\":{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}},\"task_state\":{\"state\":\"running\",\"state_desc\":\"running\",\"start_ts\":1676286744171,\"uptime\":23}}]}"
+    func: "Cellar->update_node_stat"
+    step: " Update Node State Success."
+    hset_response: 0
+leiwn@LEIWLP01  D:\prj\github\melissokomos\cellar   main ≣ +17 ~20 -13 !                                                                [19:17]
+❯ node .\cellar.js
+[19:18:08.808] DEBUG (cellar.js/32316): node_stat is NULL.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar -> get_tasks_from_node_stat"
+    step: "From node_stat get node_tasks"
+    node_tasks: []
+[19:18:08.809] DEBUG (cellar.js/32316):  No Left task, brewers=[].
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar->resume_tasks"
+    step: "brewers=[]"
+[19:18:08.810] DEBUG (cellar.js/32316): Start New Task Listening.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_req_queue: "SINGED_TASK_REQ_QUEUE"
+    func: "Cellar->start"
+    step: "Start chk_new_task_interval Func"
+    chk_task_interval: "25"
+[19:18:08.810] DEBUG (cellar.js/32316): Start Node State Update Routinely.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar->start"
+    step: "Set update_node_stat_interval"
+    update_node_stat_interval: "26"
+[19:18:08.828] DEBUG (cellar.js/32316): found node with id: cellar-987654321 in node_stat_hset.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar -> get_node_stat"
+    step: "Get Node State From Node-ID SUCCESS"
+    node_stat: null
+D:\Prj\github\melissokomos\cellar\recipe_map.js:59
+        }
+        ^
+
+SyntaxError: Unexpected token '}'
+    at internalCompileFunction (node:internal/vm:74:18)
+    at wrapSafe (node:internal/modules/cjs/loader:1141:20)
+    at Module._compile (node:internal/modules/cjs/loader:1182:27)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1272:10)
+    at Module.load (node:internal/modules/cjs/loader:1081:32)
+    at Module._load (node:internal/modules/cjs/loader:922:12)
+    at Module.require (node:internal/modules/cjs/loader:1105:19)
+    at require (node:internal/modules/cjs/helpers:103:18)
+    at Object.<anonymous> (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:7:20)
+    at Module._compile (node:internal/modules/cjs/loader:1218:14)
+
+Node.js v18.13.0
+[19:18:13.609] DEBUG (brewer.js/32316): Brewer, init finished
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+    task: "{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}}"
+[19:18:13.625] DEBUG (brewer.js/32316): Brew, starting...
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+[19:18:13.625] DEBUG (cellar.js/32316): Success Start Brewer.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    func: "Cellar->chk_new_task"
+    step: "Start Brewer."
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    brewer_id: "parser-task-1"
+    brewer_name: "Parser Task: parser-task-1"
+    func: "Cellar->chk_new_task"
+    step: "Start brewer Success."
+[19:18:13.629] DEBUG (cellar.js/32316):  Update Node State Success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    node_state: "{\"id\":\"cellar-987654321\",\"type\":\"cellar\",\"start_ts\":1676287088804,\"uptime\":4822,\"task_limit\":\"3\",\"task_count\":1,\"redis_url\":\"redis://192.168.0.77:6379/0\",\"task_req_queue\":\"SINGED_TASK_REQ_QUEUE\",\"task_rsq_queue\":\"SINGED_TASK_RSP_QUEUE\",\"node_stat_hset\":\"SINGED_NODE_STAT_HSET\",\"task_list\":[{\"task_content\":{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}},\"task_state\":{\"state\":\"running\",\"state_desc\":\"running\",\"start_ts\":1676287093609,\"uptime\":17}}]}"
+    func: "Cellar->update_node_stat"
+    step: " Update Node State Success."
+    hset_response: 1
+[19:18:13.827] DEBUG (cellar.js/32316):  Update Node State Success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    node_state: "{\"id\":\"cellar-987654321\",\"type\":\"cellar\",\"start_ts\":1676287088804,\"uptime\":5020,\"task_limit\":\"3\",\"task_count\":1,\"redis_url\":\"redis://192.168.0.77:6379/0\",\"task_req_queue\":\"SINGED_TASK_REQ_QUEUE\",\"task_rsq_queue\":\"SINGED_TASK_RSP_QUEUE\",\"node_stat_hset\":\"SINGED_NODE_STAT_HSET\",\"task_list\":[{\"task_content\":{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}},\"task_state\":{\"state\":\"running\",\"state_desc\":\"running\",\"start_ts\":1676287093609,\"uptime\":215}}]}"
+    func: "Cellar->update_node_stat"
+    step: " Update Node State Success."
+    hset_response: 0
+leiwn@LEIWLP01  D:\prj\github\melissokomos\cellar   main ≣ +17 ~21 -13 !                                                                [19:20]
+❯ node .\cellar.js
+[19:21:56.755] DEBUG (cellar.js/22248): node_stat is NULL.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar -> get_tasks_from_node_stat"
+    step: "From node_stat get node_tasks"
+    node_tasks: []
+[19:21:56.755] DEBUG (cellar.js/22248):  No Left task, brewers=[].
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Cellar->resume_tasks"
+    step: "brewers=[]"
+[19:21:56.756] DEBUG (cellar.js/22248): Start New Task Listening.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_req_queue: "SINGED_TASK_REQ_QUEUE"
+    func: "Cellar->start"
+    step: "Start chk_new_task_interval Func"
+    chk_task_interval: "25"
+[19:21:56.756] DEBUG (cellar.js/22248): Start Node State Update Routinely.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar->start"
+    step: "Set update_node_stat_interval"
+    update_node_stat_interval: "26"
+[19:21:56.774] DEBUG (cellar.js/22248): found node with id: cellar-987654321 in node_stat_hset.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    func: "Cellar -> get_node_stat"
+    step: "Get Node State From Node-ID SUCCESS"
+    node_stat: null
+[19:22:01.517] DEBUG (recipe.js/16112): Recipe class loaded.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Recipe class -> constructor"
+    step: "constructor"
+[19:22:01.518] DEBUG (recipe.js/16112): Brew thru Recipe start success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Recipe class -> start"
+    step: "start"
+[19:22:01.540] DEBUG (recipe.js/16112): Redis subscribe success:
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    func: "Recipe class -> start"
+    step: "subscribe to channel"
+    channel: "mbank50-app-log-host77-1"
+    count: 1
+[19:22:01.256] DEBUG (brewer.js/22248): Brewer, init finished
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+    task: "{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}}"
+[19:22:01.275] DEBUG (brewer.js/22248): Brew, starting...
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    brewer_id: "parser-task-1"
+[19:22:01.275] DEBUG (cellar.js/22248): Success Start Brewer.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    func: "Cellar->chk_new_task"
+    step: "Start Brewer."
+[19:22:01.276] DEBUG (cellar.js/22248): Start New brewer.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    task_id: "parser-task-1"
+    task_type: "parser"
+    task_action: "start"
+    task_name: "Parser Task: parser-task-1"
+    task_desc: "Parser Task"
+    brewer_id: "parser-task-1"
+    brewer_name: "Parser Task: parser-task-1"
+    func: "Cellar->chk_new_task"
+    step: "Start brewer Success."
+[19:22:01.278] DEBUG (cellar.js/22248):  Update Node State Success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    node_state: "{\"id\":\"cellar-987654321\",\"type\":\"cellar\",\"start_ts\":1676287316749,\"uptime\":4526,\"task_limit\":\"3\",\"task_count\":1,\"redis_url\":\"redis://192.168.0.77:6379/0\",\"task_req_queue\":\"SINGED_TASK_REQ_QUEUE\",\"task_rsq_queue\":\"SINGED_TASK_RSP_QUEUE\",\"node_stat_hset\":\"SINGED_NODE_STAT_HSET\",\"task_list\":[{\"task_content\":{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}},\"task_state\":{\"state\":\"running\",\"state_desc\":\"running\",\"start_ts\":1676287321256,\"uptime\":19}}]}"
+    func: "Cellar->update_node_stat"
+    step: " Update Node State Success."
+    hset_response: 1
+[19:22:01.761] DEBUG (cellar.js/22248):  Update Node State Success.
+    node_id: "cellar-987654321"
+    node_type: "cellar"
+    node_stat_hset: "SINGED_NODE_STAT_HSET"
+    node_state: "{\"id\":\"cellar-987654321\",\"type\":\"cellar\",\"start_ts\":1676287316749,\"uptime\":5008,\"task_limit\":\"3\",\"task_count\":1,\"redis_url\":\"redis://192.168.0.77:6379/0\",\"task_req_queue\":\"SINGED_TASK_REQ_QUEUE\",\"task_rsq_queue\":\"SINGED_TASK_RSP_QUEUE\",\"node_stat_hset\":\"SINGED_NODE_STAT_HSET\",\"task_list\":[{\"task_content\":{\"id\":\"parser-task-1\",\"name\":\"Parser Task: parser-task-1\",\"scope\":\"task\",\"type\":\"parser\",\"action\":\"start\",\"desc\":\"Parser Task\",\"recipe\":\"D:\\\\Prj\\\\github\\\\melissokomos\\\\cellar\\\\recipes\\\\recipe4mbank5_app_log.js\",\"in\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_sub_ch\":\"mbank50-app-log-host77-1\"},\"out\":{\"redis_url\":\"redis://192.168.0.77:6379/0\",\"redis_pub_ch\":\"mbank50-app-log-host77-1-parser\"}},\"task_state\":{\"state\":\"running\",\"state_desc\":\"running\",\"start_ts\":1676287321256,\"uptime\":501}}]}"
+    func: "Cellar->update_node_stat"
+    step: " Update Node State Success."
+    hset_response: 0
+xml2js parseString Err:  Error: Text data outside of root node.
+Line: 0
+Column: 39
+Char: {
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1035:15)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:200:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
+xml2js parseString Err:  Error: Text data outside of root node.
+Line: 0
+Column: 39
+Char: {
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1035:15)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:211:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
+xml2js parseString Err:  Error: Unquoted attribute value
+Line: 0
+Column: 129
+Char: \
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1367:13)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:229:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
+xml2js parseString Err:  Error: Text data outside of root node.
+Line: 0
+Column: 39
+Char: {
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1035:15)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:200:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
+xml2js parseString Err:  Error: Text data outside of root node.
+Line: 0
+Column: 39
+Char: {
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1035:15)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:211:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
+xml2js parseString Err:  Error: Unquoted attribute value
+Line: 0
+Column: 129
+Char: \
+    at error (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:651:10)
+    at strictFail (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:677:7)
+    at SAXParser.write (D:\Prj\github\melissokomos\node_modules\sax\lib\sax.js:1367:13)
+    at exports.Parser.Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:323:31)
+    at Parser.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:5:59)
+    at exports.parseString (D:\Prj\github\melissokomos\node_modules\xml2js\lib\parser.js:369:19)
+    at store_xml_msg (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:64:9)
+    at Recipe.msg_handler (D:\Prj\github\melissokomos\cellar\recipes\recipe4mbank5_app_log.js:229:13)
+    at Recipe.messageHandlerWrapper (D:\Prj\github\melissokomos\cellar\recipe.js:316:18)
+    at EventEmitter.emit (node:events:513:28)
