@@ -166,7 +166,7 @@ class Hive {
   } // end of start
 
   chk_new_task() {
-  // listen to task-queue
+    // listen to task-queue
     this.redis.lpop(this.task_req_queue, (err, res) => {
       if (err) {
         this.log_err("chk_new_task", "listen to task-queue", `Task REQ Queue:${ this.task_req_queue }`, err, "listen to task-queue fail .")

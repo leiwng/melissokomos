@@ -56,7 +56,7 @@ const parse_ts = (ts_in_str) => {
   return new Date(ts_str)
 }
 
-const isNumeric = n => !!Number(n);
+const isNumeric = n => !!Number(n)
 
 const convert_to_number = (obj) => {
   if (isNumeric(obj)) {
@@ -216,294 +216,294 @@ const _msg_handler = (recipe, msg) => {
   }
 
   switch (STATE) {
-  case STATES.idle:
-    if (REG_FORM_1_REQ.test(msg)) {
-      MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO.custNum_add = msg_segments[3]
-      MSG_INFO.tranCode_add = msg_segments[4]
-      MSG_INFO.bizDesc = msg_segments[5]
-      MSG_INFO.infoType_add = "M"
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      STATE = STATES.form1ReqInfo
-    } else if (REG_FORM_1_RSP.test(msg)) {
-      MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      STATE = STATES.form1RspInfo
-    } else if (msg.indexOf(FLAG_FORM_2_REQ) !== -1) {
-      MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO.custNum_add = msg_segments[3]
-      MSG_INFO.tranCode_add = msg_segments[4]
-      MSG_INFO.bizDesc = msg_segments[5]
-      MSG_INFO.infoType_add = "M"
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = "<LZYH>"
-      STATE = STATES.form2ReqInfo
-    } else if (REG_FORM_2_RSP.test(msg)) {
+    case STATES.idle:
+      if (REG_FORM_1_REQ.test(msg)) {
+        MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO.custNum_add = msg_segments[3]
+        MSG_INFO.tranCode_add = msg_segments[4]
+        MSG_INFO.bizDesc = msg_segments[5]
+        MSG_INFO.infoType_add = "M"
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        STATE = STATES.form1ReqInfo
+      } else if (REG_FORM_1_RSP.test(msg)) {
+        MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        STATE = STATES.form1RspInfo
+      } else if (msg.indexOf(FLAG_FORM_2_REQ) !== -1) {
+        MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO.custNum_add = msg_segments[3]
+        MSG_INFO.tranCode_add = msg_segments[4]
+        MSG_INFO.bizDesc = msg_segments[5]
+        MSG_INFO.infoType_add = "M"
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = "<LZYH>"
+        STATE = STATES.form2ReqInfo
+      } else if (REG_FORM_2_RSP.test(msg)) {
       // REG_FORM_2_RSP msg: the msg head and body in one line and msg body is in JSON format.
-      MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      if (MAP.lookup(MSG_INFO.seqNum_add)) {
-        MSG_BUF = msg.substring(msg.indexOf("{"), msg.lastIndexOf("}") + 1)
-        if (!_store_json_msg(MSG_BUF)) {
+        MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        if (MAP.lookup(MSG_INFO.seqNum_add)) {
+          MSG_BUF = msg.substring(msg.indexOf("{"), msg.lastIndexOf("}") + 1)
+          if (!_store_json_msg(MSG_BUF)) {
           // Parse JSON String to JSON Object failed, reset all.
-          _reset()
-          break
-        }
-        if (!_calc_duration()) {
+            _reset()
+            break
+          }
+          if (!_calc_duration()) {
           // cannot calculate duration, message broken, reset all.
-          logger.error({}, "REG_FORM_2_RSP message: cannot calculate duration, message broken, reset all.")
+            logger.error({}, "REG_FORM_2_RSP message: cannot calculate duration, message broken, reset all.")
+            _reset()
+            break
+          }
+          //The field length is too long, delete.
+          delete MSG_INFO.EqmtMg
+          //The field length is too long, delete.
+          delete MSG_INFO.trusfortDevice
+          logger.debug({ MSG_INFO: MSG_INFO }, "sendResult DATA.")
+          recipe.sendResult(JSON.stringify(MSG_INFO))
+          MAP.delete(MSG_INFO.seqNum_add)
           _reset()
-          break
-        }
-        //The field length is too long, delete.
-        delete MSG_INFO.EqmtMg
-        //The field length is too long, delete.
-        delete MSG_INFO.trusfortDevice
-        logger.debug({ MSG_INFO: MSG_INFO }, "sendResult DATA.")
-        recipe.sendResult(JSON.stringify(MSG_INFO))
-        MAP.delete(MSG_INFO.seqNum_add)
-        _reset()
         // logger.debug({MSG_INFO: MSG_INFO}, "Good Case for FORM_2_RSP message:")
-      } else {
+        } else {
         // FORM_2_RSP message responses to many cases REQ message.
         // The FORM_2_REQ message is just one kind REQ message which response by FORM_2_RSP message,
         // So, in this else case, there will be so many FORM_2_RSP messages, but not REQ message.
         // So, for this case here, we just ignore it. OK, Dude!
         // logger.error({msg: msg, MSG_INFO: MSG_INFO}, "FORM_2_RSP MSG: No stored REQ msg info before, only receive response msg.")
+          _reset()
+        }
+        STATE = STATES.idle
+      }else if (REG_FORM_3_REQ.test(msg)) {
+        MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO.custNum_add = msg_segments[3]
+        MSG_INFO.tranCode_add = msg_segments[4]
+        MSG_INFO.bizDesc = msg_segments[5]
+        MSG_INFO.infoType_add = "M"
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = ""
+        STATE = STATES.form3ReqInfo
+      } else if (REG_FORM_3_RSP.test(msg)) {
+        MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = ""
+        STATE = STATES.form3RspInfo
+      } else if (REG_FORM_4_REQ.test(msg)) {
+        MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO.custNum_add = msg_segments[3]
+        MSG_INFO.tranCode_add = msg_segments[4]
+        MSG_INFO.bizDesc = msg_segments[5]
+        MSG_INFO.infoType_add = "M"
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        STATE = STATES.form4ReqInfo
+      } else if (REG_FORM_4_RSP.test(msg)) {
+        MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
+        let msg_segments = msg.split(" ")
+        MSG_INFO.seqNum_add = msg_segments[2]
+        MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
+        MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+        STATE = STATES.form4RspInfo
+      } else if (REG_FORM_5_REQ.test(msg)) {
+        _parse_login_info(msg)
+        logger.debug({pack_data: MSG_INFO},"sendResult DATA.")
+        recipe.sendResult(JSON.stringify(MSG_INFO))
         _reset()
       }
-      STATE = STATES.idle
-    }else if (REG_FORM_3_REQ.test(msg)) {
-      MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO.custNum_add = msg_segments[3]
-      MSG_INFO.tranCode_add = msg_segments[4]
-      MSG_INFO.bizDesc = msg_segments[5]
-      MSG_INFO.infoType_add = "M"
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = ""
-      STATE = STATES.form3ReqInfo
-    } else if (REG_FORM_3_RSP.test(msg)) {
-      MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = ""
-      STATE = STATES.form3RspInfo
-    } else if (REG_FORM_4_REQ.test(msg)) {
-      MSG_INFO.startTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO.custNum_add = msg_segments[3]
-      MSG_INFO.tranCode_add = msg_segments[4]
-      MSG_INFO.bizDesc = msg_segments[5]
-      MSG_INFO.infoType_add = "M"
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      STATE = STATES.form4ReqInfo
-    } else if (REG_FORM_4_RSP.test(msg)) {
-      MSG_INFO.endTime = parse_ts(msg.substring(1, 24))
-      let msg_segments = msg.split(" ")
-      MSG_INFO.seqNum_add = msg_segments[2]
-      MSG_INFO = _merge_msg_pack_in_map(MSG_INFO)
-      MSG_BUF = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      STATE = STATES.form4RspInfo
-    } else if (REG_FORM_5_REQ.test(msg)) {
-      _parse_login_info(msg)
-      logger.debug({pack_data: MSG_INFO},"sendResult DATA.")
-      recipe.sendResult(JSON.stringify(MSG_INFO))
-      _reset()
-    }
-    break
+      break
 
-  case STATES.form1ReqInfo:
-    if (REG_DATE.test(msg)) {
+    case STATES.form1ReqInfo:
+      if (REG_DATE.test(msg)) {
       // get new Date-Time started line, mean new Pack of Message coming.
-      if (MSG_BUF) {
+        if (MSG_BUF) {
         // store REQ package into MAP
-        _store_xml_msg(MSG_BUF)
-        _reset()
-        // rehandle the new message again, or this message will be lost.
-        _msg_handler(recipe, msg)
-        break
-      }
-    } else {
-      MSG_BUF += msg
-      if (msg.indexOf("</service>") != -1) {
-        _store_xml_msg(MSG_BUF)
-        _reset()
-      }
-    }
-    break
-
-  case STATES.form1RspInfo:
-    if (REG_DATE.test(msg)) {
-      if (MSG_BUF) {
-        _store_xml_msg(MSG_BUF)
-        let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
-        if (mapped_msg_info) {
-          MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
-          if (!_calc_duration()) {
-            logger.error({}, "STATES.form1RspInfo if REG_DATE: cannot calculate duration, message broken, reset all.")
-            _reset()
-            break
-          }
-          delete MSG_INFO.EqmtMg//The field length is too long
-          logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
-          recipe.sendResult(JSON.stringify(MSG_INFO))
-          MAP.delete(MSG_INFO.seqNum_add)
+          _store_xml_msg(MSG_BUF)
+          _reset()
+          // rehandle the new message again, or this message will be lost.
+          _msg_handler(recipe, msg)
+          break
+        }
+      } else {
+        MSG_BUF += msg
+        if (msg.indexOf("</service>") != -1) {
+          _store_xml_msg(MSG_BUF)
+          _reset()
         }
       }
-      _reset()
-      // re-enter _msg_handler to make current msg got handled and processed.
-      _msg_handler(recipe, msg)
       break
-    } else {
-      MSG_BUF += msg
-      if (msg.indexOf("</service>") != -1) {
-        _store_xml_msg(MSG_BUF)
-        let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
-        if (mapped_msg_info) {
-          MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
-          if (!_calc_duration()) {
-            logger.error({}, "STATES.form1RspInfo: cannot calculate duration, message broken, reset all.")
-            _reset()
-            break
+
+    case STATES.form1RspInfo:
+      if (REG_DATE.test(msg)) {
+        if (MSG_BUF) {
+          _store_xml_msg(MSG_BUF)
+          let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
+          if (mapped_msg_info) {
+            MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
+            if (!_calc_duration()) {
+              logger.error({}, "STATES.form1RspInfo if REG_DATE: cannot calculate duration, message broken, reset all.")
+              _reset()
+              break
+            }
+            delete MSG_INFO.EqmtMg//The field length is too long
+            logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
+            recipe.sendResult(JSON.stringify(MSG_INFO))
+            MAP.delete(MSG_INFO.seqNum_add)
           }
-          delete MSG_INFO.EqmtMg//The field length is too long
-          logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
-          recipe.sendResult(JSON.stringify(MSG_INFO))
-          MAP.delete(MSG_INFO.seqNum_add)
-        } // RSP message there should be a REQ msg info pack in MAP, if not, just ignore it.
+        }
         _reset()
+        // re-enter _msg_handler to make current msg got handled and processed.
+        _msg_handler(recipe, msg)
+        break
+      } else {
+        MSG_BUF += msg
+        if (msg.indexOf("</service>") != -1) {
+          _store_xml_msg(MSG_BUF)
+          let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
+          if (mapped_msg_info) {
+            MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
+            if (!_calc_duration()) {
+              logger.error({}, "STATES.form1RspInfo: cannot calculate duration, message broken, reset all.")
+              _reset()
+              break
+            }
+            delete MSG_INFO.EqmtMg//The field length is too long
+            logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
+            recipe.sendResult(JSON.stringify(MSG_INFO))
+            MAP.delete(MSG_INFO.seqNum_add)
+          } // RSP message there should be a REQ msg info pack in MAP, if not, just ignore it.
+          _reset()
+        }
       }
-    }
-    break
-
-  case STATES.form2ReqInfo:
-    if (REG_DATE.test(msg)) {
-      if (MSG_BUF) {
-        _store_xml_msg(MSG_BUF)
-      }
-      _reset()
-      _msg_handler(recipe, msg)
       break
-    } else {
-      MSG_BUF += msg
-      if (msg.indexOf("</LZYH>") !== -1) {
-        _store_xml_msg(MSG_BUF)
-        _reset()
-      }
-      // no else case, keep in current state and continue receive new msg line.
-    }
-    break
 
-  case STATES.form3ReqInfo:
-    if (REG_DATE.test(msg)) {
+    case STATES.form2ReqInfo:
+      if (REG_DATE.test(msg)) {
+        if (MSG_BUF) {
+          _store_xml_msg(MSG_BUF)
+        }
+        _reset()
+        _msg_handler(recipe, msg)
+        break
+      } else {
+        MSG_BUF += msg
+        if (msg.indexOf("</LZYH>") !== -1) {
+          _store_xml_msg(MSG_BUF)
+          _reset()
+        }
+      // no else case, keep in current state and continue receive new msg line.
+      }
+      break
+
+    case STATES.form3ReqInfo:
+      if (REG_DATE.test(msg)) {
       // The message form3ReqInfo body is the next line of message head line.
       // IF get new Date-Time line means another new message pack coming,
       // So, this current form3ReqInfo message is broken, which have no body.
       // Then, _reset state and message buffer to handle new message pack.
-      _reset()
-      _msg_handler(recipe, msg)
-      break
-    } else {
-      MSG_BUF = msg
-      if (Object.keys(MSG_INFO).length !== 0) {
+        _reset()
+        _msg_handler(recipe, msg)
+        break
+      } else {
+        MSG_BUF = msg
+        if (Object.keys(MSG_INFO).length !== 0) {
         // no need to query MAP for saved msg header info,
         // header info is only saved in MSG_INFO for performance consideration.
-        if (!_store_json_msg(MSG_BUF)) {
-          _reset()
-          break
-        }
-        _reset()
-      } else {
-        logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3ReqInfo msg broken, no msg head, only receive msg body.")
-        _reset()
-      }
-    }
-    break
-
-  case STATES.form3RspInfo:
-    if (REG_DATE.test(msg)) {
-      // same as form2ReqInfo message pack
-      _reset()
-      _msg_handler(recipe, msg)
-      break
-    } else {
-      MSG_BUF = msg
-      if (Object.keys(MSG_INFO).length !== 0) {
-        if (MAP.lookup(MSG_INFO.seqNum_add)) {
           if (!_store_json_msg(MSG_BUF)) {
             _reset()
             break
           }
+          _reset()
+        } else {
+          logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3ReqInfo msg broken, no msg head, only receive msg body.")
+          _reset()
+        }
+      }
+      break
+
+    case STATES.form3RspInfo:
+      if (REG_DATE.test(msg)) {
+      // same as form2ReqInfo message pack
+        _reset()
+        _msg_handler(recipe, msg)
+        break
+      } else {
+        MSG_BUF = msg
+        if (Object.keys(MSG_INFO).length !== 0) {
+          if (MAP.lookup(MSG_INFO.seqNum_add)) {
+            if (!_store_json_msg(MSG_BUF)) {
+              _reset()
+              break
+            }
+            if (!_calc_duration()) {
+              logger.error({}, "STATES.form3RspInfo: cannot calculate duration, message broken, reset all.")
+              _reset()
+              break
+            }
+            delete MSG_INFO.sign//The field length is too long
+            logger.debug({ MSG_INFO: MSG_INFO }, "sendResult DATA.")
+            recipe.sendResult(JSON.stringify(MSG_INFO))
+            MAP.delete(MSG_INFO.seqNum_add)
+            _reset()
+          } else {
+            logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3RspInfo msg broken, no REQ msg, only receive response msg.")
+            _reset()
+          }
+        } else {
+          logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3RspInfo msg broken, no msg head, only receive msg body.")
+          _reset()
+        }
+      }
+      break
+
+    case STATES.form4ReqInfo:
+      if (!REG_DATE.test(msg)) {
+        MSG_BUF += msg
+      } else {
+        _store_xml_msg(MSG_BUF)
+        _reset()
+        _msg_handler(recipe, msg)
+      }
+      break
+
+    case STATES.form4RspInfo:
+      if (!REG_DATE.test(msg)) {
+        MSG_BUF += msg
+      } else {
+        _store_xml_msg(MSG_BUF)
+        let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
+        if (mapped_msg_info) {
+          MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
           if (!_calc_duration()) {
             logger.error({}, "STATES.form3RspInfo: cannot calculate duration, message broken, reset all.")
             _reset()
             break
           }
-          delete MSG_INFO.sign//The field length is too long
-          logger.debug({ MSG_INFO: MSG_INFO }, "sendResult DATA.")
+          delete MSG_INFO.AuthParam//The field length is too long
+          logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
           recipe.sendResult(JSON.stringify(MSG_INFO))
           MAP.delete(MSG_INFO.seqNum_add)
-          _reset()
-        } else {
-          logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3RspInfo msg broken, no REQ msg, only receive response msg.")
-          _reset()
         }
-      } else {
-        logger.error({msg: msg, MSG_INFO: MSG_INFO}, "form3RspInfo msg broken, no msg head, only receive msg body.")
         _reset()
       }
-    }
-    break
+      break
 
-  case STATES.form4ReqInfo:
-    if (!REG_DATE.test(msg)) {
-      MSG_BUF += msg
-    } else {
-      _store_xml_msg(MSG_BUF)
+    default:
       _reset()
-      _msg_handler(recipe, msg)
-    }
-    break
-
-  case STATES.form4RspInfo:
-    if (!REG_DATE.test(msg)) {
-      MSG_BUF += msg
-    } else {
-      _store_xml_msg(MSG_BUF)
-      let mapped_msg_info = MAP.get_data(MSG_INFO.seqNum_add)
-      if (mapped_msg_info) {
-        MSG_INFO = Object.assign(mapped_msg_info, MSG_INFO)
-        if (!_calc_duration()) {
-          logger.error({}, "STATES.form3RspInfo: cannot calculate duration, message broken, reset all.")
-          _reset()
-          break
-        }
-        delete MSG_INFO.AuthParam//The field length is too long
-        logger.debug({MSG_INFO: MSG_INFO},"sendResult DATA.")
-        recipe.sendResult(JSON.stringify(MSG_INFO))
-        MAP.delete(MSG_INFO.seqNum_add)
-      }
-      _reset()
-    }
-    break
-
-  default:
-    _reset()
-    break
+      break
   }
 }
 
