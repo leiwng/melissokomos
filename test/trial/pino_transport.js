@@ -7,30 +7,30 @@ const { join } = require("path")
 const file = join(tmpdir(), `pino-${process.pid}-example`)
 
 const transport = pino.transport({
-    targets: [{
-        level: "warn",
-        target: "pino/file",
-        options: {
-            destination: file
-        }
-    /*
+  targets: [{
+  level: "warn",
+  target: "pino/file",
+  options: {
+    destination: file
+  }
+  /*
   }, {
-    level: 'info',
-    target: 'pino-elasticsearch',
-    options: {
-      node: 'http://localhost:9200'
-    }
-    */
-    }, {
-        level: "info",
-        target: "pino-pretty"
-    }]
+  level: 'info',
+  target: 'pino-elasticsearch',
+  options: {
+  node: 'http://localhost:9200'
+  }
+  */
+  }, {
+  level: "info",
+  target: "pino-pretty"
+  }]
 })
 
 const logger = pino(transport)
 
 logger.info({
-    file
+  file
 }, "logging destination")
 
 logger.info("hello world")
@@ -41,7 +41,7 @@ logger.info({ obj: 42, b: 2 }, "hello world")
 logger.info({ nested: { obj: 42 } }, "nested")
 logger.warn("WARNING!")
 setImmediate(() => {
-    logger.info("after setImmediate")
+  logger.info("after setImmediate")
 })
 logger.error(new Error("an error"))
 

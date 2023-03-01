@@ -12,19 +12,19 @@ const MasonBee = require("./masonbee")
 
 
 class Bee {
-    constructor(task, node_id, node_type) {
+  constructor(task, node_id, node_type) {
 
-        if (task.type == "agent") {
-            return new MasonBee(task, node_id, node_type)
-        } else if (task.type == "active") {
-            return new CuckooBee(task, node_id, node_type)
-        } else if (task.type == "passive") {
-            return new BumbleBee(task, node_id, node_type)
-        } else {
-            logger.error(`Unknown task type: ${task.type}`)
-            throw new Error("Invalid task type: ")
-        }
-    } // end of constructor
+    if (task.type == "agent") {
+      return new MasonBee(task, node_id, node_type)
+    } else if (task.type == "active") {
+      return new CuckooBee(task, node_id, node_type)
+    } else if (task.type == "passive") {
+      return new BumbleBee(task, node_id, node_type)
+    } else {
+      logger.error(`Unknown task type: ${task.type}`)
+      throw new Error("Invalid task type: ")
+    }
+  } // end of constructor
 } // end of class Bee
 
 module.exports = Bee

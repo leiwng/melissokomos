@@ -30,17 +30,17 @@ var mobile_bank_map = void 0
 
 //var states = { idle: 0, recReqInfo: 1, recRspInfo: 2 };
 var states = {
-    idle: 0,
-    form1ReqInfo: 1,
-    form1RspInfo: 2,
-    form2ReqInfo: 3,
-    form2RspInfo: 4,
-    form3ReqInfo: 5,
-    form3RspInfo: 6,
-    form4ReqInfo: 7,
-    form4RspInfo: 8,
-    form5ReqInfo: 9,
-    form5RspInfo: 10
+  idle: 0,
+  form1ReqInfo: 1,
+  form1RspInfo: 2,
+  form2ReqInfo: 3,
+  form2RspInfo: 4,
+  form3ReqInfo: 5,
+  form3RspInfo: 6,
+  form4ReqInfo: 7,
+  form4RspInfo: 8,
+  form5ReqInfo: 9,
+  form5RspInfo: 10
 }
 
 var state = states.idle
@@ -48,9 +48,9 @@ var msg_buf = ""
 var msg_info = {}
 
 var resetState = function resetState() {
-    msg_buf = ""
-    state = states.idle
-    msg_info = {}
+  msg_buf = ""
+  state = states.idle
+  msg_info = {}
 }
 
 //定义匹配需采集消息的正则
@@ -95,9 +95,9 @@ var REG_DATE = /^\[[0-9]{4}-[0-9]{2}-[0-9]{2}\s/
 
 var parse_ts = function parse_ts(tsString){
 
-    var tsString2 = tsString.replace(/,/, ".")
+  var tsString2 = tsString.replace(/,/, ".")
 
-    return new Date(tsString2)
+  return new Date(tsString2)
 
 }
 
@@ -105,11 +105,11 @@ var parse_ts = function parse_ts(tsString){
 
 var delete_map_record = function delete_map_record(rec_id) {
 
-    if (mobile_bank_map.get(rec_id)) {
+  if (mobile_bank_map.get(rec_id)) {
 
-        mobile_bank_map.delete(rec_id)
+    mobile_bank_map.delete(rec_id)
 
-    }
+  }
 
 }
 
@@ -117,55 +117,55 @@ var delete_map_record = function delete_map_record(rec_id) {
 
 var parseXmlMsg = function parseXmlMsg(parser) {
 
-    var  msg1 = msg_buf
+  var  msg1 = msg_buf
 
-    try {
+  try {
 
-        // 将XML格式字串转换为JSON对象, 返回值在xmlJson中, 错误信息在err中
+    // 将XML格式字串转换为JSON对象, 返回值在xmlJson中, 错误信息在err中
 
-        (0, _xml2js.parseString)( msg1, { explicitArray: false }, function (err, xmlJson) {
+    (0, _xml2js.parseString)( msg1, { explicitArray: false }, function (err, xmlJson) {
 
-            if (err == null) {
+      if (err == null) {
 
-                flat_json(xmlJson, msg_info)
+        flat_json(xmlJson, msg_info)
 
-                var existPack = mobile_bank_map.get(msg_info.seqNum_add)
+        var existPack = mobile_bank_map.get(msg_info.seqNum_add)
 
-                if (existPack) {
+        if (existPack) {
 
-                    var tmp_stored_msg_info = mobile_bank_map.get(msg_info.seqNum_add).data
+          var tmp_stored_msg_info = mobile_bank_map.get(msg_info.seqNum_add).data
 
-                    var full_pack_msg_info = (0, _assign2.default)({}, tmp_stored_msg_info, msg_info)
+          var full_pack_msg_info = (0, _assign2.default)({}, tmp_stored_msg_info, msg_info)
 
-                    mobile_bank_map.delete(msg_info.seqNum_add)
+          mobile_bank_map.delete(msg_info.seqNum_add)
 
-                    mobile_bank_map.add(msg_info.seqNum_add, full_pack_msg_info)
+          mobile_bank_map.add(msg_info.seqNum_add, full_pack_msg_info)
 
-                } else {
+        } else {
 
-                    mobile_bank_map.add(msg_info.seqNum_add, msg_info)
+          mobile_bank_map.add(msg_info.seqNum_add, msg_info)
 
-                }
+        }
 
-                // resetState()
+        // resetState()
 
-            } else {
-
-                resetState()
-
-            }
-
-        })
-
-    } catch (err) {
-
-        console.log(err)
-
-        parser.sendError(msg_info, "state.xml", err)
+      } else {
 
         resetState()
 
-    }
+      }
+
+    })
+
+  } catch (err) {
+
+    console.log(err)
+
+    parser.sendError(msg_info, "state.xml", err)
+
+    resetState()
+
+  }
 
 }
 
@@ -173,45 +173,45 @@ var parseXmlMsg = function parseXmlMsg(parser) {
 
 var parseLoginInfo = function parseLoginInfo (str) {
 
-    var strArr = str.split(" INFO  ")
+  var strArr = str.split(" INFO  ")
 
-    //console.log(strArr);
+  //console.log(strArr);
 
-    msg_info.startTime = parse_ts(strArr[0].substring(1, strArr[0].indexOf("]")))
+  msg_info.startTime = parse_ts(strArr[0].substring(1, strArr[0].indexOf("]")))
 
-    msg_info.loginType_add = strArr[0].split(" ").pop()
+  msg_info.loginType_add = strArr[0].split(" ").pop()
 
 
 
-    var body = strArr[1]
+  var body = strArr[1]
 
-    //console.log(body);
+  //console.log(body);
 
-    var bodyArr = body.split("：")
+  var bodyArr = body.split("：")
 
-    //console.log(bodyArr);
+  //console.log(bodyArr);
 
-    msg_info.custName_add = bodyArr[1].slice(0, -3)
+  msg_info.custName_add = bodyArr[1].slice(0, -3)
 
-    msg_info.phoneNo_add = bodyArr[2].slice(0, -5)
+  msg_info.phoneNo_add = bodyArr[2].slice(0, -5)
 
-    msg_info.custNum_add = bodyArr[3].slice(0, -3)
+  msg_info.custNum_add = bodyArr[3].slice(0, -3)
 
-    var bodyArr4Arr = bodyArr[4].split(/\([经|纬]度\):/g)
+  var bodyArr4Arr = bodyArr[4].split(/\([经|纬]度\):/g)
 
-    //msg_info.clientVer = bodyArr[4].slice(0, 5);
+  //msg_info.clientVer = bodyArr[4].slice(0, 5);
 
-    //msg_info.longitudeVal = bodyArr[4].split('):')[1].slice(0, -3);//经度
+  //msg_info.longitudeVal = bodyArr[4].split('):')[1].slice(0, -3);//经度
 
-    //msg_info.latitudeVal = bodyArr[4].split('):')[2];//纬度
+  //msg_info.latitudeVal = bodyArr[4].split('):')[2];//纬度
 
-    msg_info.clientVer_add = bodyArr4Arr[0]
+  msg_info.clientVer_add = bodyArr4Arr[0]
 
-    msg_info.longitudeVal_add = bodyArr4Arr[1]//经度
+  msg_info.longitudeVal_add = bodyArr4Arr[1]//经度
 
-    msg_info.latitudeVal_add = bodyArr4Arr[2]//纬度
+  msg_info.latitudeVal_add = bodyArr4Arr[2]//纬度
 
-    msg_info.infoType_add = "login"
+  msg_info.infoType_add = "login"
 
 }
 
@@ -221,19 +221,19 @@ var parseLoginInfo = function parseLoginInfo (str) {
 
 function flat_json(obj, final) {
 
-    for (var key in obj) {
+  for (var key in obj) {
 
-        if ((0, _typeof3.default)(obj[key]) == "object") {
+    if ((0, _typeof3.default)(obj[key]) == "object") {
 
-            flat_json(obj[key], final)
+      flat_json(obj[key], final)
 
-        } else {
+    } else {
 
-            final[key] = obj[key]
-
-        }
+      final[key] = obj[key]
 
     }
+
+  }
 
 }
 
@@ -241,440 +241,440 @@ function flat_json(obj, final) {
 
 var messageHandler = function messageHandler(parser, channel, msg) {
 
-    // msg = msg.message
+  // msg = msg.message
 
-    switch (state) {
+  switch (state) {
 
-    case states.idle:
+  case states.idle:
 
-        //格式 1
+    //格式 1
 
-        if (REG_FORM_1_REQ.test(msg)) {
+    if (REG_FORM_1_REQ.test(msg)) {
 
-            //var stp1 = msg.indexOf('[') + 1;
+      //var stp1 = msg.indexOf('[') + 1;
 
-            //var edp1 = msg.indexOf(']');
+      //var edp1 = msg.indexOf(']');
 
-            //msg_info.startTime = parse_ts(msg.substring(stp1, edp1));
+      //msg_info.startTime = parse_ts(msg.substring(stp1, edp1));
 
-            msg_info.startTime = parse_ts(msg.substring(1, 24))
+      msg_info.startTime = parse_ts(msg.substring(1, 24))
 
-            var msg_split1 = msg.split(" ")
+      var msg_split1 = msg.split(" ")
 
-            msg_info.seqNum_add = msg_split1[2]
+      msg_info.seqNum_add = msg_split1[2]
 
-            msg_info.custNum_add = msg_split1[3]
+      msg_info.custNum_add = msg_split1[3]
 
-            msg_info.tranCode_add = msg_split1[4]
+      msg_info.tranCode_add = msg_split1[4]
 
-            msg_info.bizDesc = msg_split1[5]
+      msg_info.bizDesc = msg_split1[5]
 
-            msg_info.infoType_add = "M"
+      msg_info.infoType_add = "M"
 
-            msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+      msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 
-            state = states.form1ReqInfo
+      state = states.form1ReqInfo
 
-        } else if (REG_FORM_1_RSP.test(msg)) {
+    } else if (REG_FORM_1_RSP.test(msg)) {
 
-            //var stp2 = msg.indexOf('[') + 1;
+      //var stp2 = msg.indexOf('[') + 1;
 
-            //var edp2 = msg.indexOf(']');
+      //var edp2 = msg.indexOf(']');
 
-            //msg_info.endTime = parse_ts(msg.substring(stp2, edp2));
+      //msg_info.endTime = parse_ts(msg.substring(stp2, edp2));
 
-            msg_info.endTime = parse_ts(msg.substring(1, 24))
+      msg_info.endTime = parse_ts(msg.substring(1, 24))
 
-            var msg_split2 = msg.split(" ")
+      var msg_split2 = msg.split(" ")
 
-            msg_info.seqNum_add = msg_split2[2]
+      msg_info.seqNum_add = msg_split2[2]
 
-            msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+      msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 
-            state = states.form1RspInfo
+      state = states.form1RspInfo
 
-            //格式 2
+      //格式 2
 
-        } else if (REG_FORM_2_REQ.test(msg)) {
+    } else if (REG_FORM_2_REQ.test(msg)) {
 
-            msg_info.startTime = parse_ts(msg.substring(1, 24))
+      msg_info.startTime = parse_ts(msg.substring(1, 24))
 
-            var msg_split3 = msg.split(" ")
+      var msg_split3 = msg.split(" ")
 
-            msg_info.seqNum_add = msg_split3[2]
+      msg_info.seqNum_add = msg_split3[2]
 
-            msg_info.custNum_add = msg_split3[3]
+      msg_info.custNum_add = msg_split3[3]
 
-            msg_info.tranCode_add = msg_split3[4]
+      msg_info.tranCode_add = msg_split3[4]
 
-            msg_info.bizDesc = msg_split3[5]
+      msg_info.bizDesc = msg_split3[5]
 
-            msg_info.infoType_add = "M"
+      msg_info.infoType_add = "M"
 
-            msg_buf = "<LZYH>"
+      msg_buf = "<LZYH>"
 
-            state = states.form2ReqInfo
+      state = states.form2ReqInfo
 
-        } else if (REG_FORM_2_RSP.test(msg)) {
+    } else if (REG_FORM_2_RSP.test(msg)) {
 
-            var msg_split4 = msg.split(" ")
+      var msg_split4 = msg.split(" ")
 
-            msg_info.seqNum_add = msg_split4[2]
+      msg_info.seqNum_add = msg_split4[2]
 
-            var tempData1 = mobile_bank_map.get(msg_info.seqNum_add)
+      var tempData1 = mobile_bank_map.get(msg_info.seqNum_add)
 
-            if (tempData1 !== undefined) {
+      if (tempData1 !== undefined) {
 
-                msg_info.endTime = parse_ts(msg.substring(1, 24))
+        msg_info.endTime = parse_ts(msg.substring(1, 24))
 
-                //Debug
+        //Debug
 
-                //console.log(msg_info.endTime);
+        //console.log(msg_info.endTime);
 
-                msg_buf = msg.substring(msg.indexOf("{"), msg.lastIndexOf("}") + 1)
+        msg_buf = msg.substring(msg.indexOf("{"), msg.lastIndexOf("}") + 1)
 
-                var finalPackData2 = tempData1.data
+        var finalPackData2 = tempData1.data
 
-                if (finalPackData2 != null) {
+        if (finalPackData2 != null) {
 
-                    flat_json(JSON.parse(msg_buf), msg_info)
+          flat_json(JSON.parse(msg_buf), msg_info)
 
-                    finalPackData2 = (0, _assign2.default)(finalPackData2, msg_info)
+          finalPackData2 = (0, _assign2.default)(finalPackData2, msg_info)
 
-                    finalPackData2.duration = finalPackData2.endTime.getTime() - finalPackData2.startTime.getTime()
+          finalPackData2.duration = finalPackData2.endTime.getTime() - finalPackData2.startTime.getTime()
 
-                    delete finalPackData2.EqmtMg//The field length is too long
+          delete finalPackData2.EqmtMg//The field length is too long
 
-                    delete finalPackData2.trusfortDevice//The field length is too long
+          delete finalPackData2.trusfortDevice//The field length is too long
 
-                    //Debug
+          //Debug
 
-                    //console.log(finalPackData2.endTime, finalPackData2.startTime, finalPackData2.duration);
+          //console.log(finalPackData2.endTime, finalPackData2.startTime, finalPackData2.duration);
 
-                    parser.sendResult((0, _stringify2.default)(finalPackData2))
+          parser.sendResult((0, _stringify2.default)(finalPackData2))
 
-                    delete_map_record(msg_info.seqNum_add)
+          delete_map_record(msg_info.seqNum_add)
 
-                    resetState()
-
-                }
-
-            }
-
-            state = states.idle
-
-            //格式 3,请求和响应报文内容为下一行的json
-
-        } else if (REG_FORM_3_REQ.test(msg)) {
-
-            msg_info.startTime = parse_ts(msg.substring(1, 24))
-
-            var msg_split5 = msg.split(" ")
-
-            msg_info.seqNum_add = msg_split5[2]
-
-            msg_info.custNum_add = msg_split5[3]
-
-            msg_info.tranCode_add = msg_split5[4]
-
-            msg_info.bizDesc = msg_split5[5]
-
-            msg_info.infoType_add = "M"
-
-
-            msg_buf = ""
-
-            state = states.form3ReqInfo
-
-        } else if (REG_FORM_3_RSP.test(msg)) {
-
-            msg_info.endTime = parse_ts(msg.substring(1, 24))
-
-            var msg_split6 = msg.split(" ")
-
-            msg_info.seqNum_add = msg_split6[2]
-
-            msg_buf = ""
-
-            state = states.form3RspInfo
-
-            //格式 4
-
-        } else if (REG_FORM_4_REQ.test(msg)) {
-
-            msg_info.startTime = parse_ts(msg.substring(1, 24))
-
-            var msg_split7 = msg.split(" ")
-
-            msg_info.seqNum_add = msg_split7[2]
-
-            msg_info.custNum_add = msg_split7[3]
-
-            msg_info.tranCode_add = msg_split7[4]
-
-            msg_info.bizDesc = msg_split7[5]
-
-            msg_info.infoType_add = "M"
-
-            msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-
-            state = states.form4ReqInfo
-
-        } else if (REG_FORM_4_RSP.test(msg)) {
-
-            msg_info.endTime = parse_ts(msg.substring(1, 24))
-
-            var msg_split8 = msg.split(" ")
-
-            msg_info.seqNum_add = msg_split8[2]
-
-            msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-
-            state = states.form4RspInfo
-
-            //格式 5
-
-        } else if (REG_FORM_5_REQ.test(msg)) {
-
-            parseLoginInfo(msg)
-
-            //console.log(msg_info);
-
-            parser.sendResult((0, _stringify2.default)(msg_info))
-
-            resetState()
+          resetState()
 
         }
 
-        break
+      }
 
-    case states.form1ReqInfo:
+      state = states.idle
 
-        if (REG_DATE.test(msg)) {
+      //格式 3,请求和响应报文内容为下一行的json
 
-            resetState()
+    } else if (REG_FORM_3_REQ.test(msg)) {
 
-        }
+      msg_info.startTime = parse_ts(msg.substring(1, 24))
 
-        msg_buf += msg
+      var msg_split5 = msg.split(" ")
 
-        if (msg.indexOf("</service>") != -1) {
+      msg_info.seqNum_add = msg_split5[2]
 
-            parseXmlMsg(parser)
+      msg_info.custNum_add = msg_split5[3]
 
-            resetState()
+      msg_info.tranCode_add = msg_split5[4]
 
-        }
+      msg_info.bizDesc = msg_split5[5]
 
-        break
+      msg_info.infoType_add = "M"
 
-    case states.form1RspInfo:
 
-        if (REG_DATE.test(msg)) {
+      msg_buf = ""
 
-            resetState()
+      state = states.form3ReqInfo
 
-        }
+    } else if (REG_FORM_3_RSP.test(msg)) {
 
-        msg_buf += msg
+      msg_info.endTime = parse_ts(msg.substring(1, 24))
 
-        if (msg.indexOf("</service>") != -1) {
+      var msg_split6 = msg.split(" ")
 
-            parseXmlMsg(parser)
+      msg_info.seqNum_add = msg_split6[2]
 
-            var finalPackData1 = mobile_bank_map.get(msg_info.seqNum_add).data
+      msg_buf = ""
 
-            if (finalPackData1 != null) {
+      state = states.form3RspInfo
 
-                finalPackData1.duration = finalPackData1.endTime.getTime() - finalPackData1.startTime.getTime()
+      //格式 4
 
-                delete finalPackData1.EqmtMg//The field length is too long
+    } else if (REG_FORM_4_REQ.test(msg)) {
 
-                parser.sendResult((0, _stringify2.default)(finalPackData1))
+      msg_info.startTime = parse_ts(msg.substring(1, 24))
 
-                delete_map_record(msg_info.seqNum_add)
+      var msg_split7 = msg.split(" ")
 
-            }
+      msg_info.seqNum_add = msg_split7[2]
 
-            resetState()
+      msg_info.custNum_add = msg_split7[3]
 
-        }
+      msg_info.tranCode_add = msg_split7[4]
 
-        break
+      msg_info.bizDesc = msg_split7[5]
 
-    case states.form2ReqInfo:
+      msg_info.infoType_add = "M"
 
-        if (REG_DATE.test(msg)) {
+      msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 
-            resetState()
+      state = states.form4ReqInfo
 
-        }
+    } else if (REG_FORM_4_RSP.test(msg)) {
 
-        msg_buf += msg
+      msg_info.endTime = parse_ts(msg.substring(1, 24))
 
-        if (msg.indexOf("</LZYH>") != -1) {
+      var msg_split8 = msg.split(" ")
 
-            parseXmlMsg(parser)
+      msg_info.seqNum_add = msg_split8[2]
 
-            //console.log('Map--->', mobile_bank_map.get(msg_info.seqNum_add).data);
+      msg_buf = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 
-            resetState()
+      state = states.form4RspInfo
 
-        }
+      //格式 5
 
-        break
+    } else if (REG_FORM_5_REQ.test(msg)) {
 
-        //Discard this state, doesn't go into
+      parseLoginInfo(msg)
 
-    case states.form2RspInfo:
+      //console.log(msg_info);
 
-        resetState()
+      parser.sendResult((0, _stringify2.default)(msg_info))
 
-        break
-
-    case states.form3ReqInfo:
-
-        if (REG_DATE.test(msg)) {
-
-            resetState()
-
-        }
-
-        msg_buf = msg
-
-        var tempData2 = mobile_bank_map.get(msg_info.seqNum_add)
-
-        if (tempData2 === undefined) {
-
-            flat_json(JSON.parse(msg_buf), msg_info)
-
-            mobile_bank_map.add(msg_info.seqNum_add, msg_info)
-
-            //Debug
-
-            //console.log('form3--->Form3 REQ_SEQ no existed\n', msg_info);
-
-            resetState()
-
-        } else {
-
-            console.log("--->ShouJiYinHang_mbank2.js::messageHandler()::Form3 REQ_SEQ existing\n", msg_info)
-
-            //mobile_bank_map.add(msg_info.seqNum_add, msg_info);
-
-            resetState()
-
-        }
-
-        break
-
-    case states.form3RspInfo:
-
-        if (REG_DATE.test(msg)) {
-
-            resetState()
-
-        }
-
-        msg_buf = msg
-
-        var tempData3 = mobile_bank_map.get(msg_info.seqNum_add)
-
-        if (tempData3 !== undefined) {
-
-            var finalPackData3 = tempData3.data
-
-            flat_json(JSON.parse(msg_buf), msg_info)
-
-            finalPackData3 = (0, _assign2.default)(finalPackData3, msg_info)
-
-            finalPackData3.duration = finalPackData3.endTime.getTime() - finalPackData3.startTime.getTime()
-
-            delete finalPackData3.sign//The field length is too long
-
-            //Debug
-
-            //console.log(finalPackData3.endTime, finalPackData3.startTime, finalPackData3.duration);
-
-            //Debug
-
-            //console.log('--->Form3 Result', finalPackData3);
-
-            parser.sendResult((0, _stringify2.default)(finalPackData3))
-
-            delete_map_record(msg_info.seqNum_add)
-
-            resetState()
-
-        }
-
-        break
-
-    case states.form4ReqInfo:
-
-        if (!REG_DATE.test(msg)) {
-
-            msg_buf += msg
-
-        } else {
-
-            parseXmlMsg(parser)
-
-            resetState()
-
-        }
-
-        break
-
-    case states.form4RspInfo:
-
-        if (!REG_DATE.test(msg)) {
-
-            msg_buf += msg
-
-        } else {
-
-            parseXmlMsg(parser)
-
-            var finalPackData4 = mobile_bank_map.get(msg_info.seqNum_add).data
-
-            if (finalPackData4 != null) {
-
-                finalPackData4.duration = finalPackData4.endTime.getTime() - finalPackData4.startTime.getTime()
-
-                delete finalPackData4.AuthParam//The field length is too long
-
-                //Debug
-
-                //console.log(finalPackData4.endTime, finalPackData4.startTime, finalPackData4.duration);
-
-                parser.sendResult((0, _stringify2.default)(finalPackData4))
-
-                delete_map_record(msg_info.seqNum_add)
-
-            }
-
-            resetState()
-
-        }
-
-        break
-
-        //Discard this state, doesn't go into
-
-    case states.form5ReqInfo:
-
-        resetState()
-
-        break
-
-    default:
-
-        resetState()
-
-        break
+      resetState()
 
     }
+
+    break
+
+  case states.form1ReqInfo:
+
+    if (REG_DATE.test(msg)) {
+
+      resetState()
+
+    }
+
+    msg_buf += msg
+
+    if (msg.indexOf("</service>") != -1) {
+
+      parseXmlMsg(parser)
+
+      resetState()
+
+    }
+
+    break
+
+  case states.form1RspInfo:
+
+    if (REG_DATE.test(msg)) {
+
+      resetState()
+
+    }
+
+    msg_buf += msg
+
+    if (msg.indexOf("</service>") != -1) {
+
+      parseXmlMsg(parser)
+
+      var finalPackData1 = mobile_bank_map.get(msg_info.seqNum_add).data
+
+      if (finalPackData1 != null) {
+
+        finalPackData1.duration = finalPackData1.endTime.getTime() - finalPackData1.startTime.getTime()
+
+        delete finalPackData1.EqmtMg//The field length is too long
+
+        parser.sendResult((0, _stringify2.default)(finalPackData1))
+
+        delete_map_record(msg_info.seqNum_add)
+
+      }
+
+      resetState()
+
+    }
+
+    break
+
+  case states.form2ReqInfo:
+
+    if (REG_DATE.test(msg)) {
+
+      resetState()
+
+    }
+
+    msg_buf += msg
+
+    if (msg.indexOf("</LZYH>") != -1) {
+
+      parseXmlMsg(parser)
+
+      //console.log('Map--->', mobile_bank_map.get(msg_info.seqNum_add).data);
+
+      resetState()
+
+    }
+
+    break
+
+    //Discard this state, doesn't go into
+
+  case states.form2RspInfo:
+
+    resetState()
+
+    break
+
+  case states.form3ReqInfo:
+
+    if (REG_DATE.test(msg)) {
+
+      resetState()
+
+    }
+
+    msg_buf = msg
+
+    var tempData2 = mobile_bank_map.get(msg_info.seqNum_add)
+
+    if (tempData2 === undefined) {
+
+      flat_json(JSON.parse(msg_buf), msg_info)
+
+      mobile_bank_map.add(msg_info.seqNum_add, msg_info)
+
+      //Debug
+
+      //console.log('form3--->Form3 REQ_SEQ no existed\n', msg_info);
+
+      resetState()
+
+    } else {
+
+      console.log("--->ShouJiYinHang_mbank2.js::messageHandler()::Form3 REQ_SEQ existing\n", msg_info)
+
+      //mobile_bank_map.add(msg_info.seqNum_add, msg_info);
+
+      resetState()
+
+    }
+
+    break
+
+  case states.form3RspInfo:
+
+    if (REG_DATE.test(msg)) {
+
+      resetState()
+
+    }
+
+    msg_buf = msg
+
+    var tempData3 = mobile_bank_map.get(msg_info.seqNum_add)
+
+    if (tempData3 !== undefined) {
+
+      var finalPackData3 = tempData3.data
+
+      flat_json(JSON.parse(msg_buf), msg_info)
+
+      finalPackData3 = (0, _assign2.default)(finalPackData3, msg_info)
+
+      finalPackData3.duration = finalPackData3.endTime.getTime() - finalPackData3.startTime.getTime()
+
+      delete finalPackData3.sign//The field length is too long
+
+      //Debug
+
+      //console.log(finalPackData3.endTime, finalPackData3.startTime, finalPackData3.duration);
+
+      //Debug
+
+      //console.log('--->Form3 Result', finalPackData3);
+
+      parser.sendResult((0, _stringify2.default)(finalPackData3))
+
+      delete_map_record(msg_info.seqNum_add)
+
+      resetState()
+
+    }
+
+    break
+
+  case states.form4ReqInfo:
+
+    if (!REG_DATE.test(msg)) {
+
+      msg_buf += msg
+
+    } else {
+
+      parseXmlMsg(parser)
+
+      resetState()
+
+    }
+
+    break
+
+  case states.form4RspInfo:
+
+    if (!REG_DATE.test(msg)) {
+
+      msg_buf += msg
+
+    } else {
+
+      parseXmlMsg(parser)
+
+      var finalPackData4 = mobile_bank_map.get(msg_info.seqNum_add).data
+
+      if (finalPackData4 != null) {
+
+        finalPackData4.duration = finalPackData4.endTime.getTime() - finalPackData4.startTime.getTime()
+
+        delete finalPackData4.AuthParam//The field length is too long
+
+        //Debug
+
+        //console.log(finalPackData4.endTime, finalPackData4.startTime, finalPackData4.duration);
+
+        parser.sendResult((0, _stringify2.default)(finalPackData4))
+
+        delete_map_record(msg_info.seqNum_add)
+
+      }
+
+      resetState()
+
+    }
+
+    break
+
+    //Discard this state, doesn't go into
+
+  case states.form5ReqInfo:
+
+    resetState()
+
+    break
+
+  default:
+
+    resetState()
+
+    break
+
+  }
 
 }
 

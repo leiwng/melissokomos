@@ -16,7 +16,7 @@ pino.info({ obj: 42 }, "hello world")
 pino.info({ obj: 42, b: 2 }, "hello world")
 pino.info({ nested: { obj: 42 } }, "nested")
 setImmediate(() => {
-    pino.info("after setImmediate")
+  pino.info("after setImmediate")
 })
 pino.error(new Error("an error"))
 

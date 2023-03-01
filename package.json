@@ -2,6 +2,7 @@
   "dependencies": {
     "dotenv": "^16.0.3",
     "ioredis": "^5.2.3",
+    "node-cron": "^3.0.2",
     "pino": "^8.6.1",
     "pino-pretty": "^9.2.0",
     "ssh2": "^1.11.0",

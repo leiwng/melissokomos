@@ -1,51 +1,51 @@
 {
-    "deepscan.enable": true,
-    "cSpell.words": [
-        "lpop",
-        "childs",
-        "cuckoobee",
-        "Cuckooo",
-        "Cukoobee",
-        "cust",
-        "efel",
-        "emerg",
-        "Eqmt",
-        "filebeat",
-        "hdel",
-        "hget",
-        "hset",
-        "inte",
-        "LINDEX",
-        "linebreak",
-        "LLEN",
-        "rpush",
-        "LRANGE",
-        "LZYH",
-        "Masonbee",
-        "mbank",
-        "melissokomos",
-        "ndjson",
-        "pino",
-        "rpush",
-        "Shou",
-        "singeds",
-        "TASKID",
-        "trusfort",
-        "yitong"
-    ],
-    "[javascript]": {
-        "editor.tabSize": 4
-    },
-    "[html]": {
-        "editor.tabSize": 4
-    },
-    "[json]": {
-        "editor.tabSize": 4
-    },
-    "[css]": {
-        "editor.tabSize": 4
-    },
-    "[python]": {
-        "editor.tabSize": 4
-    }
+  "deepscan.enable": true,
+  "cSpell.words": [
+    "lpop",
+    "childs",
+    "cuckoobee",
+    "Cuckooo",
+    "Cukoobee",
+    "cust",
+    "efel",
+    "emerg",
+    "Eqmt",
+    "filebeat",
+    "hdel",
+    "hget",
+    "hset",
+    "inte",
+    "LINDEX",
+    "linebreak",
+    "LLEN",
+    "rpush",
+    "LRANGE",
+    "LZYH",
+    "Masonbee",
+    "mbank",
+    "melissokomos",
+    "ndjson",
+    "pino",
+    "rpush",
+    "Shou",
+    "singeds",
+    "TASKID",
+    "trusfort",
+    "yitong"
+  ],
+  "[javascript]": {
+    "editor.tabSize": 2
+  },
+  "[html]": {
+    "editor.tabSize": 2
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[css]": {
+    "editor.tabSize": 2
+  },
+  "[python]": {
+    "editor.tabSize": 4
+  }
 }

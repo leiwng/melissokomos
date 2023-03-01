@@ -1,0 +1,64 @@
+{
+  "id": "cellar-987654321",
+  "type": "cellar",
+  "start_ts": 1676867617876,
+  "uptime": 971379,
+  "task_limit": "3",
+  "task_count": 2,
+  "redis_url": "redis://192.168.0.77:6379/0",
+  "task_req_queue": "SINGED_TASK_REQ_QUEUE",
+  "task_rsq_queue": "SINGED_TASK_RSP_QUEUE",
+  "node_stat_hset": "SINGED_NODE_STAT_HSET",
+  "task_list": [
+  {
+  "task_content": {
+  "id": "parser-task-2",
+  "name": "Parser Task: parser-task-2",
+  "scope": "task",
+  "type": "parser",
+  "action": "start",
+  "desc": "Parser Task",
+  "recipe": "D:Prjgithubmelissokomoscellarrecipesrecipe4mbank5_app_log.js",
+  "in": {
+    "redis_url": "redis://192.168.0.77:6379/0",
+    "redis_sub_ch": "mbank50-app-log-host77-2"
+  },
+  "out": {
+    "redis_url": "redis://192.168.0.77:6379/0",
+    "redis_pub_ch": "mbank50-app-log-host77-2-parser"
+  }
+  },
+  "task_state": {
+  "state": "running",
+  "state_desc": "running",
+  "start_ts": 1676867620893,
+  "uptime": 968362
+  }
+  },
+  {
+  "task_content": {
+  "id": "parser-task-1",
+  "name": "Parser Task: parser-task-1",
+  "scope": "task",
+  "type": "parser",
+  "action": "start",
+  "desc": "Parser Task",
+  "recipe": "D:Prjgithubmelissokomoscellarrecipesrecipe4mbank5_app_log.js",
+  "in": {
+    "redis_url": "redis://192.168.0.77:6379/0",
+    "redis_sub_ch": "mbank50-app-log-host77-1"
+  },
+  "out": {
+    "redis_url": "redis://192.168.0.77:6379/0",
+    "redis_pub_ch": "mbank50-app-log-host77-1-parser"
+  }
+  },
+  "task_state": {
+  "state": "running",
+  "state_desc": "running",
+  "start_ts": 1676867623905,
+  "uptime": 965350
+  }
+  }
+  ]
+}
