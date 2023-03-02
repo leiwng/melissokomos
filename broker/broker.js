@@ -6,13 +6,12 @@ const Redis = require("ioredis")
 const logger = require("./broker_logger")(require("path").basename(__filename))
 require("dotenv").config()
 
-const TASK_TYPE_L2R = require("./msg_cvt_tab").TASK_TYPE_L2R
-const TASK_ACTION_L2R = require("./msg_cvt_tab").TASK_ACTION_L2R
-const EXEC_TYPE_L2R = require("./msg_cvt_tab").EXEC_TYPE_L2R
-const RSP_TASK_ACTION_R2L = require("./msg_cvt_tab").RSP_TASK_ACTION_R2L
-const RSP_TASK_TYPE_R2L = require("./msg_cvt_tab").RSP_TASK_TYPE_R2L
-const RSP_TASK_RESULT_R2L = require("./msg_cvt_tab").RSP_TASK_RESULT_R2L
-
+const L2R_TASK_TYPE = require("./msg_cvt_tab").L2R_TASK_TYPE
+const L2R_TASK_ACTION = require("./msg_cvt_tab").L2R_TASK_ACTION
+const L2R_EXEC_TYPE = require("./msg_cvt_tab").L2R_EXEC_TYPE
+const R2L_RSP_TASK_ACTION = require("./msg_cvt_tab").R2L_RSP_TASK_ACTION
+const R2L_RSP_TASK_TYPE = require("./msg_cvt_tab").R2L_RSP_TASK_TYPE
+const R2L_RSP_TASK_RESULT = require("./msg_cvt_tab").R2L_RSP_TASK_RESULT
 
 class Broker {
   constructor() {
@@ -32,7 +31,6 @@ class Broker {
     this.l_node_chg_ch = process.env.L_NODE_CHG_CH
     this.l_node_rsp_q = process.env.L_NODE_RSP_Q
 
-
     this.r_redis_url = process.env.R_REDIS_URL
     this.r_task_req_q = process.env.R_TASK_REQ_Q
     this.r_task_rsp_q = process.env.R_TASK_RSP_Q
@@ -51,7 +49,13 @@ class Broker {
       this.l_redis_client = new Redis(this.l_redis_url)
       this.r_redis_client = new Redis(this.r_redis_url)
     } catch (err) {
-      this.log_err("init", "create_redis_client", "error", err, "Create Redis Client Error")
+      this.log_err(
+        "init",
+        "create_redis_client",
+        "error",
+        err,
+        "Create Redis Client Error"
+      )
       process.exit(1)
     }
   }
@@ -70,13 +74,22 @@ class Broker {
     )
 
     this.l_redis_client.on("message", this.on_chg_msg.bind(this))
-    this.l_redis_client.subscribe(this.l_task_chg_ch, this.l_node_chg_ch, (err, count) => {
-      if (err) {
-        this.log_err("start", "subscribe", "error", err, "Subscribe Error")
-        process.exit(1)
+    this.l_redis_client.subscribe(
+      this.l_task_chg_ch,
+      this.l_node_chg_ch,
+      (err, count) => {
+        if (err) {
+          this.log_err("start", "subscribe", "error", err, "Subscribe Error")
+          process.exit(1)
+        }
+        this.log_info(
+          "start",
+          "subscribe to l_task_chg_ch",
+          "success",
+          `Subscribed to ${this.l_task_chg_ch} with subscriber count: ${count}.`
+        )
       }
-      this.log_info("start", "subscribe to l_task_chg_ch", "success", `Subscribed to ${this.l_task_chg_ch} with subscriber count: ${count}.`)
-    })
+    )
 
     this.log_info("start", "start", "info", "Broker Started.")
   }
@@ -91,7 +104,7 @@ class Broker {
         r_task = {
           node_id: l_task.NODENAME,
           scope: "task", // Added for right-side
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           task_id_for_stop: l_task.TASKID,
         }
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -101,7 +114,7 @@ class Broker {
         r_task = {
           node_id: l_task.NODENAME,
           scope: "node", // Added for right-side
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           task_limit: l_task.NUM_TASK,
         }
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -110,11 +123,9 @@ class Broker {
         // Handle messages from other channels
         break
     }
-
   }
 
   chk_new_task() {
-
     if (this.on_chk_new_task) {
       return
     }
@@ -123,7 +134,13 @@ class Broker {
     // Check Agent Task from Left-side Agent Task Queue, if there is task, send to Right-side Task Req Queue.
     this.l_redis_client.blpop(this.l_task_agent_q, 0, (err, res) => {
       if (err) {
-        this.log_err("chk_new_task", "l_redis_client.blpop", "error", err, "L Redis Client Blpop Error")
+        this.log_err(
+          "chk_new_task",
+          "l_redis_client.blpop",
+          "error",
+          err,
+          "L Redis Client Blpop Error"
+        )
         process.exit(1)
       }
       if (res) {
@@ -133,8 +150,8 @@ class Broker {
           name: l_task.NAME,
           node_id: "", // New Task, no need to assign node_id
           scope: "task", // Added for right-side
-          type: TASK_TYPE_L2R[l_task.TYPE],
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          type: L2R_TASK_TYPE[l_task.TYPE],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           desc: l_task.DESC,
           in: {
             redis_url: l_task.INPUT.URL,
@@ -145,7 +162,7 @@ class Broker {
           out: {
             redis_url: l_task.OUTPUT.URL,
             redis_pub_ch: l_task.OUTPUT.CHANNEL,
-          }
+          },
         } // finish compose right-side task
         // Send to Right-side Task Req Queue
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -155,7 +172,13 @@ class Broker {
     // Check Passive Task from Left-side Passive Task Queue, if there is task, send to Right-side Task Req Queue.
     this.l_redis_client.blpop(this.l_task_passive_q, 0, (err, res) => {
       if (err) {
-        this.log_err("chk_new_task", "l_redis_client.blpop", "error", err, "L Redis Client Blpop Error")
+        this.log_err(
+          "chk_new_task",
+          "l_redis_client.blpop",
+          "error",
+          err,
+          "L Redis Client Blpop Error"
+        )
         process.exit(1)
       }
       if (res) {
@@ -165,8 +188,8 @@ class Broker {
           name: l_task.NAME,
           node_id: "", // New Task, no need to assign node_id
           scope: "task", // Added for right-side
-          type: TASK_TYPE_L2R[l_task.TYPE],
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          type: L2R_TASK_TYPE[l_task.TYPE],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           desc: l_task.DESC,
           in: {
             ssh_host: l_task.INPUT.SSH_HOST,
@@ -179,7 +202,7 @@ class Broker {
           out: {
             redis_url: l_task.OUTPUT.URL,
             redis_pub_ch: l_task.OUTPUT.CHANNEL,
-          }
+          },
         } // finish compose right-side task
         // Send to Right-side Task Req Queue
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -189,7 +212,13 @@ class Broker {
     // Check Active Task from Left-side Active Task Queue, if there is task, send to Right-side Task Req Queue.
     this.l_redis_client.blpop(this.l_task_active_q, 0, (err, res) => {
       if (err) {
-        this.log_err("chk_new_task", "l_redis_client.blpop", "error", err, "L Redis Client Blpop Error")
+        this.log_err(
+          "chk_new_task",
+          "l_redis_client.blpop",
+          "error",
+          err,
+          "L Redis Client Blpop Error"
+        )
         process.exit(1)
       }
       if (res) {
@@ -199,8 +228,8 @@ class Broker {
           name: l_task.NAME,
           node_id: "", // New Task, no need to assign node_id
           scope: "task", // Added for right-side
-          type: TASK_TYPE_L2R[l_task.TYPE],
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          type: L2R_TASK_TYPE[l_task.TYPE],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           desc: l_task.DESC,
           in: {
             ssh_host: l_task.INPUT.SSH_HOST,
@@ -209,13 +238,13 @@ class Broker {
             ssh_pass: l_task.INPUT.SSH_PASS,
             encoding: l_task.INPUT.ENCODING,
             shell_cmd: l_task.INPUT.COMMAND_LINE,
-            exec_type: EXEC_TYPE_L2R[l_task.INPUT.COLLECTOR_TYPE],
+            exec_type: L2R_EXEC_TYPE[l_task.INPUT.COLLECTOR_TYPE],
             trigger: l_task.INPUT.TRIGGER,
           },
           out: {
             redis_url: l_task.OUTPUT.URL,
             redis_pub_ch: l_task.OUTPUT.CHANNEL,
-          }
+          },
         } // finish compose right-side task
         // Send to Right-side Task Req Queue
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -225,7 +254,13 @@ class Broker {
     // Check Parser Task from Left-side Parser Task Queue, if there is task, send to Right-side Task Req Queue.
     this.l_redis_client.blpop(this.l_task_parser_q, 0, (err, res) => {
       if (err) {
-        this.log_err("chk_new_task", "l_redis_client.blpop", "error", err, "L Redis Client Blpop Error")
+        this.log_err(
+          "chk_new_task",
+          "l_redis_client.blpop",
+          "error",
+          err,
+          "L Redis Client Blpop Error"
+        )
         process.exit(1)
       }
       if (res) {
@@ -235,8 +270,8 @@ class Broker {
           name: l_task.NAME,
           node_id: "", // New Task, no need to assign node_id
           scope: "task", // Added for right-side
-          type: TASK_TYPE_L2R[l_task.TYPE],
-          action: TASK_ACTION_L2R[l_task.ACTION],
+          type: L2R_TASK_TYPE[l_task.TYPE],
+          action: L2R_TASK_ACTION[l_task.ACTION],
           desc: l_task.DESC,
           recipe: l_task.PARSER_PLUGIN,
           in: {
@@ -246,7 +281,7 @@ class Broker {
           out: {
             redis_url: l_task.OUTPUT.URL,
             redis_pub_ch: l_task.OUTPUT.CHANNEL,
-          }
+          },
         } // finish compose right-side task
         // Send to Right-side Task Req Queue
         this.r_redis_client.rpush(this.r_task_req_q, JSON.stringify(r_task))
@@ -256,7 +291,7 @@ class Broker {
     this.on_chk_new_task = false
   } // end of chk_new_task()
 
-  chK_task_rsp() {
+  chk_task_rsp() {
     if (this.on_chk_task_rsp) {
       return
     }
@@ -265,27 +300,60 @@ class Broker {
     // Check Task Rsp from Right-side Task Rsp Queue, if there is task, send to Left-side Task Rsp Queue.
     this.r_redis_client.blpop(this.r_task_rsp_q, 0, (err, res) => {
       if (err) {
-        this.log_err("chk_task_rsp", "r_redis_client.blpop", "error", err, "R Redis Client Blpop Error")
+        this.log_err(
+          "chk_task_rsp",
+          "r_redis_client.blpop",
+          "error",
+          err,
+          "R Redis Client Blpop Error"
+        )
         process.exit(1)
       }
       if (res) {
+        // TODO: handle node limit change response message.
+        // TODO: handle node start/stop response message.
         const r_rsp = JSON.parse(res[1])
-        const l_rsp = {
-          TASKID: r_rsp.task.id,
-          ACTION: RSP_TASK_ACTION_R2L[r_rsp.task.action],
-          TYPE: RSP_TASK_TYPE_R2L[r_rsp.task.type],
-          RESULT: RSP_TASK_RESULT_R2L[r_rsp.result],
-          DESC: r_rsp.result_desc,
-          NODENAME: r_rsp.node_id,
-        } // finish compose left-side task response message
-
-        // Send to Left-side Task Rsp Queue
-        this.l_redis_client.rpush(this.l_task_rsp_q, JSON.stringify(l_rsp))
+        if (r_rsp.task.action === "task_limit_change") {
+          // task response for node task limit change
+          const l_rsp = {
+            ACTION: R2L_RSP_TASK_ACTION[r_rsp.task.action],
+            NODENAME: r_rsp.node_id,
+            RESULT: R2L_RSP_TASK_RESULT[r_rsp.result],
+            NUM_TASK: r_rsp.task.task_limit,
+            DESC: r_rsp.result_desc,
+          }
+          // Send to Left-side node task return queue
+          this.l_redis_client.rpush(this.l_node_rsp_q, JSON.stringify(l_rsp))
+        } else if (r_rsp.task.action === "node_start") {
+          //TODO: handle node start response message in Hive and Cellar
+          // task response for node started/stopped/errored-exit
+          const l_rsp = {
+            ACTION: R2L_RSP_TASK_ACTION[r_rsp.action],
+            NODENAME: r_rsp.node_id,
+            RESULT: R2L_RSP_TASK_RESULT[r_rsp.result],
+            DESC: r_rsp.result_desc,
+          }
+          // Send to Left-side node task return queue
+          this.l_redis_client.rpush(this.l_node_rsp_q, JSON.stringify(l_rsp))
+        } else {
+          // task response for task start/stop
+          const l_rsp = {
+            ACTION: R2L_RSP_TASK_ACTION[r_rsp.task.action],
+            TASKID: r_rsp.task.id,
+            RESULT: R2L_RSP_TASK_RESULT[r_rsp.result],
+            TYPE: R2L_RSP_TASK_TYPE[r_rsp.task.type],
+            NAME: r_rsp.task.name,
+            DESC: r_rsp.result_desc,
+            NODENAME: r_rsp.node_id,
+          } // finish compose left-side task response message
+          // Send to Left-side Task Rsp Queue
+          this.l_redis_client.rpush(this.l_task_rsp_q, JSON.stringify(l_rsp))
+        }
       }
     })
 
     this.on_chk_task_rsp = false
-  } // end of chK_task_rsp()
+  } // end of chk_task_rsp()
 
   log_info(func, step, info, msg) {
     logger.info(
@@ -308,7 +376,7 @@ class Broker {
         func: func,
         step: step,
         info: info,
-        err: err
+        err: err,
       },
       msg
     )
@@ -322,10 +390,9 @@ class Broker {
         func: func,
         step: step,
         info: info,
-        dbg: dbg
+        dbg: dbg,
       },
       msg
     )
   }
-
 }

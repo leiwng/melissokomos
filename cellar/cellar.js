@@ -260,6 +260,10 @@ class Cellar {
       this.update_node_stat.bind(this),
       this.node_stat_update_interval_ms
     )
+
+    // send node started message to task response queue
+    this.notify_node_state("node_started", "success", "Node started successfully.")
+
     logger.info(
       {
         node_id: this.node_id,
@@ -616,6 +620,10 @@ class Cellar {
     )
 
     clearInterval(this.update_node_stat_interval)
+
+    // send node stopped message to task response queue
+    this.notify_node_state("node_stopped", "success", "Node stopped successfully.")
+
     logger.info(
       {
         node_id: this.node_id,
@@ -645,6 +653,19 @@ class Cellar {
         "node_id": this.node_id,
         "node_type": this.node_type,
         "task": task,
+        "result": result,
+        "result_desc": desc
+      }
+    ))
+    return
+  }
+
+  notify_node_state(action, result, desc) {
+    this.redis.rpush(this.task_rsp_queue, JSON.stringify(
+      {
+        "node_id": this.node_id,
+        "node_type": this.node_type,
+        "action": action,
         "result": result,
         "result_desc": desc
       }

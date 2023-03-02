@@ -162,6 +162,9 @@ class Hive {
       this.update_node_stat.bind(this),
       this.node_stat_update_interval_ms
     )
+    // send node started message to task response queue
+    this.notify_node_state("node_started", "success", "Node started successfully.")
+
     this.log_info("start", "Start update_node_stat_interval", `update_node_stat_interval: ${this.update_node_stat_interval}`, "Start Node State Update Routinely.")
   } // end of start
 
@@ -326,7 +329,7 @@ class Hive {
   } // end of stop_bee
 
   stop() {
-  //  Stop listen to task-queue
+    //  Stop listen to task-queue
     clearInterval(this.chk_task_interval)
     this.log_info("stop", " Stop listen to task-queue", "chk_task_interval", " Stop listen to task-queueSuccess.")
 
@@ -349,6 +352,10 @@ class Hive {
     // 断开redis连接
     this.redis.quit()
     this.log_info("stop", "Redis Disconnect", "redis.quit()", "Redis Disconnected.")
+
+    // Send node stopped message to task response queue
+    this.notify_node_state("node_stopped", "success", "Node stopped successfully.")
+
   } // end of stop
 
   update_task_result(task, result, desc) {
@@ -357,6 +364,19 @@ class Hive {
         "node_id": this.node_id,
         "node_type": this.node_type,
         "task": task,
+        "result": result,
+        "result_desc": desc
+      }
+    ))
+    return
+  }
+
+  notify_node_state(action, result, desc) {
+    this.redis.rpush(this.task_rsp_queue, JSON.stringify(
+      {
+        "node_id": this.node_id,
+        "node_type": this.node_type,
+        "action": action,
         "result": result,
         "result_desc": desc
       }

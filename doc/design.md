@@ -97,7 +97,6 @@ sINGED_NODE_STATE_HSET
 {
   "id": "id",
   "name": "name",
-  "node_id": "node_id",
   "scope": "task|node",
   "type": "agent|active|passive|parser",
   "action": "start|chg_task_limit",
@@ -179,7 +178,6 @@ sINGED_NODE_STATE_HSET
 {
   "id": "id",
   "name": "name",
-  "node_id": "node_id",
   "scope": "task|node",
   "type": "agent|active|passive|parser",
   "action": "start|chg_task_limit",

@@ -1,44 +1,48 @@
 
 
-const TASK_TYPE_L2R = {
+const L2R_TASK_TYPE = {
   "Agent": "agent",
   "Active": "active",
   "Passive": "passive",
   "Parser": "parser",
 }
 
-const TASK_ACTION_L2R = {
+const L2R_TASK_ACTION = {
   "Start": "start",
   "TaskStop": "stop",
   "Change_Num_Task": "chg_task_limit"
 }
 
-const EXEC_TYPE_L2R = {
+const L2R_EXEC_TYPE = {
   "Time": "on_time",
   "Interval": "interval",
   "OneShot": "one_shot"
 }
 
-const RSP_TASK_ACTION_R2L = {
+const R2L_RSP_TASK_ACTION = {
   "start": "Started",
+  "stop": "Stopped",
+  "chg_task_limit": "Change_Num_Task",
+  "node_started": "NodeStarted",
+  "node_stopped": "NodeStopped",
 }
 
-const RSP_TASK_TYPE_R2L = {
+const R2L_RSP_TASK_TYPE = {
   "agent": "Collector",
   "active": "Collector",
   "passive": "Collector",
   "parser": "Parser"
 }
 
-const RSP_TASK_RESULT_R2L = {
+const R2L_RSP_TASK_RESULT = {
   "success": "Success",
 }
 
 module.exports = {
-  TASK_TYPE_L2R: TASK_TYPE_L2R,
-  TASK_ACTION_L2R: TASK_ACTION_L2R,
-  EXEC_TYPE_L2R: EXEC_TYPE_L2R,
-  RSP_TASK_ACTION_R2L: RSP_TASK_ACTION_R2L,
-  RSP_TASK_TYPE_R2L: RSP_TASK_TYPE_R2L,
-  RSP_TASK_RESULT_R2L: RSP_TASK_RESULT_R2L,
+  L2R_TASK_TYPE: L2R_TASK_TYPE,
+  L2R_TASK_ACTION: L2R_TASK_ACTION,
+  L2R_EXEC_TYPE: L2R_EXEC_TYPE,
+  R2L_RSP_TASK_ACTION: R2L_RSP_TASK_ACTION,
+  R2L_RSP_TASK_TYPE: R2L_RSP_TASK_TYPE,
+  R2L_RSP_TASK_RESULT: R2L_RSP_TASK_RESULT,
 }

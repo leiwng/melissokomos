@@ -31,7 +31,8 @@
     "singeds",
     "TASKID",
     "trusfort",
-    "yitong"
+    "yitong",
+    "zfill"
   ],
   "[javascript]": {
     "editor.tabSize": 2
