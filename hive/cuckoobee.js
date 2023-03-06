@@ -1,5 +1,7 @@
 /***
  * Cuckoobee 喜鹊蜂, 主动采集, 通过 ssh 通道从远程目标机上执行 shell script 获get 花粉。
+ * TODO: ssh_on_ready is not proper work with start() on "Interval" and "On_Time" case, need to consider
+ * a better way
 ***/
 const { Client } = require("ssh2")
 const Redis = require("ioredis")
@@ -281,6 +283,7 @@ class Cuckoobee {
     } else if (this.exec_type === "on_time") {
       let cron_syntax = `${ss} ${mm} ${hh} * * *`
       this.task_exec_handler = cron.schedule(cron_syntax, this.shell_cmd_exec.bind(this))
+      this.task_exec_handler.start()
     } else if (this.exec_type === "one_shot") {
       this.task_exec_handler = this.shell_cmd_exec.bind(this)
       this.task_exec_handler()
@@ -303,6 +306,16 @@ class Cuckoobee {
       return "There is one instance already executing."
     }
     this.on_shell_cmd_executing = true
+
+    if (this.ssh_state === "ssh_on_close" || this.ssh_state === "ssh_on_end") {
+      this.ssh.connect({
+        host: this.ssh_host,
+        port: this.ssh_port,
+        username: this.ssh_user,
+        password: this.ssh_pass
+      })
+    }
+
     this.ssh.exec(this.ssh_cmd, (err, stream) => {
       if (err) {
         this.set_state(false, "error", "exec_error")
@@ -449,7 +462,7 @@ class Cuckoobee {
       }
     } else if (this.exec_type === "on_time") {
       if (this.task_exec_handler !== null) {
-        this.task_exec_handler.destroy()
+        this.task_exec_handler.stop()
       }
     } else if (this.exec_type === "one_shot") {
       this.task_exec_handler = null

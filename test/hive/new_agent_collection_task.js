@@ -21,14 +21,16 @@ const template = {
   }
 }
 
-let task1 = Object.assign({}, template)
+let task1 = JSON.parse(JSON.stringify(template))
 task1.id = "agc_001"
 task1.in.redis_sub_ch = "src_agc_001"
+task1.in.parameter = "/demo/labTab/AIOpsDemo/log_data/*_1dst_mbank.4.log"
 task1.out.redis_pub_ch = "agc_001"
 
-let task2 = Object.assign({}, template)
+let task2 = JSON.parse(JSON.stringify(template))
 task2.id = "agc_002"
 task2.in.redis_sub_ch = "src_agc_002"
+task2.in.parameter = "/demo/labTab/AIOpsDemo/log_data/short_*_1mbank.4.log"
 task2.out.redis_pub_ch = "agc_002"
 
 const redis = new Redis(process.env.SINGED_REDIS_URL)

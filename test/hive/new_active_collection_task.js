@@ -33,20 +33,20 @@ const template = {
 }
 
 
-let task01 = Object.assign({}, template)
+let task01 = JSON.parse(JSON.stringify(template))
 task01.id = "ac_001"
 task01.in.exec_type = "interval"
-task01.in.trigger = "00:00:50"
+task01.in.trigger = "00:03:00"
 task01.out.redis_pub_ch = "ac_001"
 
-let task02 = Object.assign({}, template)
+let task02 = JSON.parse(JSON.stringify(template))
 task02.id = "ac_002"
 task02.in.exec_type = "on_time"
-const dt = new Date(new Date.getTime() + 30000) // current time + 30 seconds
+const dt = new Date(new Date().getTime() + 30000) // current time + 30 seconds
 task02.in.trigger = `${zfill(dt.getHours(), 2)}:${zfill(dt.getMinutes(), 2)}:${zfill(dt.getSeconds(), 2)}`
 task02.out.redis_pub_ch = "ac_002"
 
-let task03 = Object.assign({}, template)
+let task03 = JSON.parse(JSON.stringify(template))
 task03.id = "ac_003"
 task03.in.exec_type = "one_shot"
 task03.in.trigger = "00:00:00"

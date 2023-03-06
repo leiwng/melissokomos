@@ -23,11 +23,11 @@ const template = {
   }
 }
 
-let task1 = Object.assign({}, template)
+let task1 = JSON.parse(JSON.stringify(template))
 task1.id = "pc_001"
 task1.out.redis_pub_ch = "pc_001"
 
-let task2 = Object.assign({}, template)
+let task2 = JSON.parse(JSON.stringify(template))
 task2.id = "pc_002"
 task2.out.redis_pub_ch = "pc_002"
 

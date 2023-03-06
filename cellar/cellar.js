@@ -316,6 +316,7 @@ class Cellar {
               task_desc: task.desc,
               func: "Cellar->chk_new_task",
               step: "NOT Parser Task",
+              res: res,
             },
             "NOT Parser Task, Send Back to Task Queue."
           )

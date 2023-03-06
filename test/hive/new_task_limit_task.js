@@ -10,7 +10,7 @@ let task = {
   type: "",
   action: "chg_task_limit",
   desc: "Chg Task Limit",
-  task_limit: 7
+  task_limit: 9
 }
 
 const redis = new Redis(process.env.SINGED_REDIS_URL)

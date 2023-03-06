@@ -58,6 +58,11 @@ class Broker {
       )
       process.exit(1)
     }
+
+    process.on("SIGINT", () => {
+      this.stop()
+      process.exit(0)
+    })
   }
 
   start() {
@@ -92,6 +97,29 @@ class Broker {
     )
 
     this.log_info("start", "start", "info", "Broker Started.")
+  }
+
+  stop() {
+    clearInterval(this.chk_new_task_interval_func)
+    clearInterval(this.chk_task_rsp_interval_func)
+    this.l_redis_client.unsubscribe(
+      this.l_task_chg_ch,
+      this.l_node_chg_ch,
+      (err, count) => {
+        if (err) {
+          this.log_err("stop", "unsubscribe", "error", err, "Unsubscribe Error")
+          process.exit(1)
+
+        }
+        this.log_info(
+          "stop",
+          "unsubscribe from l_task_chg_ch",
+          "success",
+          `Unsubscribed from ${this.l_task_chg_ch} with subscriber count: ${count}.`
+        )
+      }
+    )
+    this.log_info("stop", "stop", "info", "Broker Stopped.")
   }
 
   on_chg_msg(channel, message) {

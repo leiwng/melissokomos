@@ -52,8 +52,9 @@ minimatch('bar.foo', '*.bar') // false!
 
 ***/
 
+const { count } = require("console")
 const Redis = require("ioredis")
-const { minimatch } = require("minimatch")
+const minimatch = require("minimatch")
 const logger = require("./hive_logger")(require("path").basename(__filename))
 
 
@@ -161,7 +162,33 @@ class Masonbee {
 
   start() {
     this.sub.on("message", this.sub_on_message.bind(this))
-    this.sub.subscribe(this.sub_channel)
+    this.sub.subscribe(this.sub_channel, (err, count) => {
+      if (err) {
+        this.set_state(false, "redis_sub_error")
+        logger.error(
+          {
+            bee_id: this.id,
+            node_id: this.node_id,
+            node_type: this.node_type,
+            error: JSON.stringify(err),
+          },
+          "Masonbee, Subscribe Redis Channel failed."
+        )
+        this.stop()
+        process.exit(1)
+      } else {
+        logger.info(
+          {
+            bee_id: this.id,
+            node_id: this.node_id,
+            node_type: this.node_type,
+            channel: this.sub_channel,
+            count: count,
+          },
+          "Masonbee, Subscribe Redis Channel success."
+        )
+      }
+    })
 
     logger.info(
       {
@@ -178,7 +205,7 @@ class Masonbee {
     this.sub.quit()
     this.pub.quit()
 
-    this.set_state(false, "stopped", "ssh_end")
+    this.set_state(false, "stopped")
     logger.info(
       {
         bee_id: this.id,
@@ -189,8 +216,7 @@ class Masonbee {
     )
   } // end of stop
 
-  set_state(health, state, ssh_state) {
-    this.ssh_state = ssh_state
+  set_state(health, state) {
     this.health = health
     this.state = state
   } // end of set_status

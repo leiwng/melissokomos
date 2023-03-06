@@ -1,64 +1,107 @@
 {
-  "id": "cellar-987654321",
-  "type": "cellar",
-  "start_ts": 1676867617876,
-  "uptime": 971379,
-  "task_limit": "3",
-  "task_count": 2,
+  "id": "hive-987654321",
+  "type": "hive",
+  "start_ts": 1678092088966,
+  "uptime": 380772,
+  "task_limit": "9",
+  "task_count": 3,
   "redis_url": "redis://192.168.0.77:6379/0",
   "task_req_queue": "SINGED_TASK_REQ_QUEUE",
   "task_rsq_queue": "SINGED_TASK_RSP_QUEUE",
   "node_stat_hset": "SINGED_NODE_STAT_HSET",
   "task_list": [
-  {
-  "task_content": {
-  "id": "parser-task-2",
-  "name": "Parser Task: parser-task-2",
-  "scope": "task",
-  "type": "parser",
-  "action": "start",
-  "desc": "Parser Task",
-  "recipe": "D:Prjgithubmelissokomoscellarrecipesrecipe4mbank5_app_log.js",
-  "in": {
-    "redis_url": "redis://192.168.0.77:6379/0",
-    "redis_sub_ch": "mbank50-app-log-host77-2"
-  },
-  "out": {
-    "redis_url": "redis://192.168.0.77:6379/0",
-    "redis_pub_ch": "mbank50-app-log-host77-2-parser"
-  }
-  },
-  "task_state": {
-  "state": "running",
-  "state_desc": "running",
-  "start_ts": 1676867620893,
-  "uptime": 968362
-  }
-  },
-  {
-  "task_content": {
-  "id": "parser-task-1",
-  "name": "Parser Task: parser-task-1",
-  "scope": "task",
-  "type": "parser",
-  "action": "start",
-  "desc": "Parser Task",
-  "recipe": "D:Prjgithubmelissokomoscellarrecipesrecipe4mbank5_app_log.js",
-  "in": {
-    "redis_url": "redis://192.168.0.77:6379/0",
-    "redis_sub_ch": "mbank50-app-log-host77-1"
-  },
-  "out": {
-    "redis_url": "redis://192.168.0.77:6379/0",
-    "redis_pub_ch": "mbank50-app-log-host77-1-parser"
-  }
-  },
-  "task_state": {
-  "state": "running",
-  "state_desc": "running",
-  "start_ts": 1676867623905,
-  "uptime": 965350
-  }
-  }
+    {
+      "task_content": {
+        "id": "ac_001",
+        "name": "Active Collection Task",
+        "scope": "task",
+        "type": "active",
+        "action": "start",
+        "desc": "Active Collection",
+        "in": {
+          "ssh_host": "192.168.0.77",
+          "ssh_port": 22,
+          "ssh_user": "voyager",
+          "ssh_pass": "welcome1",
+          "encoding": "utf8",
+          "shell_cmd": "cat /demo/labTab/AIOpsDemo/log_data/short_dst_mbank.4.log",
+          "exec_type": "interval",
+          "trigger": "00:03:00"
+        },
+        "out": {
+          "redis_url": "redis://192.168.0.77:6379/0",
+          "redis_pub_ch": "ac_001"
+        }
+      },
+      "task_state": {
+        "state": "stopped",
+        "state_desc": "stopped",
+        "start_ts": 1678092113070,
+        "uptime": 356669,
+        "work_count": 50023
+      }
+    },
+    {
+      "task_content": {
+        "id": "ac_003",
+        "name": "Active Collection Task",
+        "scope": "task",
+        "type": "active",
+        "action": "start",
+        "desc": "Active Collection",
+        "in": {
+          "ssh_host": "192.168.0.77",
+          "ssh_port": 22,
+          "ssh_user": "voyager",
+          "ssh_pass": "welcome1",
+          "encoding": "utf8",
+          "shell_cmd": "cat /demo/labTab/AIOpsDemo/log_data/short_dst_mbank.4.log",
+          "exec_type": "one_shot",
+          "trigger": "00:00:00"
+        },
+        "out": {
+          "redis_url": "redis://192.168.0.77:6379/0",
+          "redis_pub_ch": "ac_003"
+        }
+      },
+      "task_state": {
+        "state": "stopped",
+        "state_desc": "stopped",
+        "start_ts": 1678092116077,
+        "uptime": 353662,
+        "work_count": 50023
+      }
+    },
+    {
+      "task_content": {
+        "id": "ac_002",
+        "name": "Active Collection Task",
+        "scope": "task",
+        "type": "active",
+        "action": "start",
+        "desc": "Active Collection",
+        "in": {
+          "ssh_host": "192.168.0.77",
+          "ssh_port": 22,
+          "ssh_user": "voyager",
+          "ssh_pass": "welcome1",
+          "encoding": "utf8",
+          "shell_cmd": "cat /demo/labTab/AIOpsDemo/log_data/short_dst_mbank.4.log",
+          "exec_type": "on_time",
+          "trigger": "16:42:17"
+        },
+        "out": {
+          "redis_url": "redis://192.168.0.77:6379/0",
+          "redis_pub_ch": "ac_002"
+        }
+      },
+      "task_state": {
+        "state": "stopped",
+        "state_desc": "stopped",
+        "start_ts": 1678092119081,
+        "uptime": 350658,
+        "work_count": 50022
+      }
+    }
   ]
 }
