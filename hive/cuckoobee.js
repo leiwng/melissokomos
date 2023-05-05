@@ -1,7 +1,7 @@
 /***
  * Cuckoobee 喜鹊蜂, 主动采集, 通过 ssh 通道从远程目标机上执行 shell script 获get 花粉。
- * TODO: ssh_on_ready is not proper work with start() on "Interval" and "On_Time" case, need to consider
- * a better way
+ * TODO: ssh_on_ready is not proper work with start() on "Interval" and "On_Time" case,
+ * TODO: need to consider a better way
 ***/
 const { Client } = require("ssh2")
 const Redis = require("ioredis")
